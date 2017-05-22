@@ -60,7 +60,25 @@ In the particular case of "WordCount" on the "Hamlet" text file, *we reduce the 
 
 ### How to test this for real
 
+Doing real test with the whole system is relatively simple. Here are the steps to follow:
 
+1. Download and initiate the [Crystal development VM that we provide](ftp://ast2-deim.urv.cat/s2caio_vm).
+2. Download and build (ant build.xml) the [Lambda Pushdown Storlet](https://github.com/Crystal-SDS/filter-samples/tree/master/Storlet_lambda_pushdown) and deploy the Storlet in Crystal via the dashboard.
+3. Download Spark (v2) from the [official webpage](http://spark.apache.org/downloads.html).
+4. Download and configure Stocator as [Spark connector for Swift](https://github.com/SparkTC/stocator) (optional, but recommended). 
+5. Export the job analyzer project as a .jar with the dependencies included (e.g., in Eclipse -> Export -> Runnable JAR -> and use as main SparkJavaAnalyzerExecutor.java)
+
+With this, you have the environment almost prepared to execute. Before executing some real stuff, you need to:
+
+6. Add a text file or sample data to a container (e.g., data1 container in the Crystal VM).
+7. Create a policy in Crystal associating the container with the Lambda Pushdown Storlet. By doing this, the GET requests on the data objects of this container will be processed by the Storlet.
+
+The last step is to do the actual execution. To this end, there is a python script that performs the complete lifecycle:
+
+```bash
+python SparkJavaJobAnalyzerExecutor.py /home/user/Desktop/SparkJavaJobAnalyzer.jar /home/user/Desktop/SparkJavaWordCount.java
+```
+The python script i) gets as input a Spark job, ii) executes the code analyzer JAR that you created, iii) sets the output lambdas to the Lambda Pushdown Storlet, iv) compiles/packages the Spark job, and v) submits the job to Spark. To enable the Python script to work properly, please set the constants of the beggining of the script code (it is already configured to work with the Crystal VM, but things like IPs and the location of Spark depend on your environment).   
 
 ### Conclusion
 
