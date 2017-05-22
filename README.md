@@ -57,8 +57,14 @@ In the particular case of "WordCount" on the "Hamlet" text file, *we reduce the 
 
 ### The Storage Side: Lambda Pushdown Storlet 
 
+The Lambda Pushdown Storlet is a storage filter that can i) convert byte streams into Java8 streams, ii) receive as input parameters Java 8 lambda functions, and iii) compile them at runtime and execute them on the data stream. To wit, an administrator can parameterize the storlet from the dashboard with lambda functions that will be compiled and executed upon a GET/PUT request. 
 
-### How to test this for real
+In general, the compilation time costs of simple lambdas are acceptable (1ms to 3ms), but they increase as the complexity of lambdas grow. There are two main optimizations implemented in the Storlet by design to improve performance:
+
+* The encoding from byte-level stream to a Java 8 stream is only perform when there are lambdas to execute.
+* The storlet contains a cache for lambdas and collectors, which means that only "new" functions pay the costs of compilation. In fact, it is common in many analytics workloads that jobs are executed periodically; therefore, for such jobs the compilation costs disappear from the second execution onwards.
+
+### How to Do a Real Test
 
 Doing real test with the whole system is relatively simple. Here are the steps to follow:
 
