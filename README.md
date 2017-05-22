@@ -1,1 +1,1 @@
-# spark-java-job-analyzer
+# SparkJavaJobAnalyzer
