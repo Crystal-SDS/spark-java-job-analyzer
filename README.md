@@ -1,6 +1,6 @@
 ### Code Analyzer for Spark Jobs (Java)
 
-This project is an example of the type of code analyzers that can be integrated in [Crystal](https://github.com/Crystal-SDS) for optimizing Big Data access to object storage via software-defined storage mechanisms. In particular, the objective of this project is to analyze the code of an input Spark job (Java) and to identify those operations performed on RDDs (and many of its subclasses) that can be delegated for execution to the storage side (thanks to a new [Storlet](https://github.com/Crystal-SDS/filter-samples/tree/master/Storlet_lambda_pushdown)). That is, operations like filter(), map() or reduce() are migrated and executed at the storage side for obtaining a faster application execution time.
+This project is an example of the type of code analyzers that can be integrated in [Crystal](https://github.com/Crystal-SDS) for optimizing analytics data access to object storage via software-defined storage mechanisms. In particular, the objective of this project is to analyze the code of an input Spark job (Java) and to identify those operations performed on RDDs (and many of its subclasses) that can be delegated for execution to the storage side (thanks to a new [Storlet](https://github.com/Crystal-SDS/filter-samples/tree/master/Storlet_lambda_pushdown)). That is, operations like filter(), map() or reduce() are migrated and executed at the storage side for obtaining a faster application execution time.
 
 ### Lifecycle
 
@@ -26,7 +26,7 @@ JavaPairRDD<String, Integer> counts = textFile
     .reduceByKey((a, b) -> a + b);
 counts.saveAsTextFile("hdfs://...");
 ```
-If we execute this job as usual in a compute cluster, Spark will first require to *ingest the whole dataset from Swift* to split lines into words, clean odd characters, create word/count pairs and then execute a final sum of word occurrences grouping workds by key.
+If we execute this job as usual in a compute cluster, Spark will first require to *ingest the whole dataset from Swift* to split lines into words, clean odd characters, create word/count pairs and then execute a final sum of word occurrences grouping words by key.
 
 ### The Compute Side: Code Analyzer
 
@@ -88,7 +88,7 @@ The python script i) gets as input a Spark job, ii) executes the code analyzer J
 
 ### Conclusion
 
-The idea is that Crystal can be a platform to support multiple job analyzers to optimize a variety of Big Data analytics frameworks apart from Spark. This project is only an evidence that software-defined storage has the potential to greatly improve Big Data analycs.
+The idea is that Crystal can be a platform to support multiple job analyzers to optimize a variety of Big Data analytics frameworks apart from Spark. It is important to note that the jobs that will benefit most from job analyzers are "data intensive"; that is, jobs that operate on large amounts of data and require transformations on it (iterative jobs that compute on small datasets will obtain small or no gains, as their performance barrier is not IO). 
 
 
 
