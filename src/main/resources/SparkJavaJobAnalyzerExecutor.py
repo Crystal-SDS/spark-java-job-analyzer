@@ -16,16 +16,21 @@ import os
 import re
 
 
-URL_CRYSTAL_API = 'http://10.30.230.217:8000/'
-AUTH_URL='http://10.30.230.217:5000/v2.0'
-USERNAME='admin'
-PASSWORD='admin'
-TENANT='crystaltest'
-EXECUTOR_LOCATION = '/home/user/Desktop/'
+URL_CRYSTAL_API = 'http://192.168.2.1:9000/'
+AUTH_URL='http://192.168.2.1:5000/v2.0'
+USERNAME='manager'
+PASSWORD='manager'
+TENANT='test'
+EXECUTOR_LOCATION = '/home/lab144/raul/'
 JAVAC_PATH = '/usr/bin/javac'
-SPARK_FOLDER = '/home/user/workspace/spark-2.1.0-bin-hadoop2.7/'
-SPARK_LIBS_LOCATION = SPARK_FOLDER + '/jars/'
+SPARK_FOLDER = '/home/lab144/raul/spark-2.1.1-bin-hadoop2.7/'
+SPARK_LIBS_LOCATION = SPARK_FOLDER + 'jars/'
 LAMBDA_PUSHDOWN_FILTER = 'lambdapushdown-1.0.jar'
+AVAILABLE_RAM = '28G'
+AVAILABLE_CPUS = '96'
+HDFS_LOCATION = '/home/lab144/raul/hadoop-2.7.3/bin/hdfs dfs '
+HDFS_IP_PORT = '192.168.2.30:9000'
+
 
 valid_token = None
 
@@ -40,7 +45,7 @@ def executeJavaAnalyzer(pathToJAR, pathToJobFile):
         if line.startswith("{\"original-job-code\":"): json_output = True
         if (json_output): jsonResult += line
     
-    print jsonResult
+    #print jsonResult
     io = StringIO(jsonResult)
     return json.load(io)
 
@@ -131,10 +136,10 @@ def main(argv=None):
     lambdasToMigrate = jsonObject.get("lambdas")
     originalJobCode = jsonObject.get("original-job-code")
     pushdownJobCode = jsonObject.get("pushdown-job-code")
-    
+     
     '''STEP 3: Decide whether or not to execute the lambda pushdown'''
     '''TODO: This will be the second phase'''
-    pushdown = True
+    pushdown = False
     jobToCompile = originalJobCode
     
     '''STEP 4: Set the lambdas in the storlet if necessary'''
@@ -152,29 +157,42 @@ def main(argv=None):
     
     jobFile = open(EXECUTOR_LOCATION + '/SparkJobMigratory.java', 'w')
     print >> jobFile, jobToCompile
-    jobFile.close() 
+    jobFile.close()
+    time.sleep(1) 
     
     print "Starting compilation"
     cmd = JAVAC_PATH + ' -cp \"'+ SPARK_LIBS_LOCATION + '*\" '
     cmd += EXECUTOR_LOCATION + 'SparkJobMigratory.java' 
     proc = subprocess.Popen(cmd, shell=True)
-    print cmd
-       
-    
+    print ">> EXECUTING: " + cmd
+           
     '''STEP 6: Package the Spark Job class as a JAR and set the manifest'''
     print "Starting packaging"
-    time.sleep(1)
+    time.sleep(3)
     cmd = 'jar -cfe ' + EXECUTOR_LOCATION + 'SparkJobMigratory.jar ' + \
                        EXECUTOR_LOCATION.replace('/','.')[1:] + 'SparkJobMigratory ' + \
                        EXECUTOR_LOCATION + 'SparkJobMigratory.class'
-    print cmd
+    print ">> EXECUTING: " + cmd
     proc = subprocess.Popen(cmd, shell=True)
-        
+       
+    '''STEP 7: In cluster mode, we need to store the produced jar in HDFS to make it available to workers'''
+    time.sleep(3)
+    print "Starting to store the JAR in HDFS"
+    cmd = HDFS_LOCATION + ' -put -f ' + EXECUTOR_LOCATION + 'SparkJobMigratory.jar ' + ' /SparkJobMigratory.jar'
+    print ">> EXECUTING: " + cmd
+    proc = subprocess.Popen(cmd, shell=True)
+    time.sleep(3) 
+
+ 
     print "Starting execution"
     '''STEP 7: Execute the job against Swift'''
-    cmd = 'bash ' + SPARK_FOLDER+ 'bin/spark-submit ' + \
-            EXECUTOR_LOCATION + 'SparkJobMigratory.jar --jars ' \
+    cmd = 'bash ' + SPARK_FOLDER+ 'bin/spark-submit --deploy-mode cluster --master spark://192.168.2.30:7077 ' + \
+            '--class ' + EXECUTOR_LOCATION.replace('/','.')[1:] + 'SparkJobMigratory ' + \
+            '--driver-class-path ~/raul/spark-2.1.1-bin-hadoop2.7/jars/stocator-1.0.9.jar ' + \
+            '--total-executor-cores ' + AVAILABLE_CPUS + ' --executor-memory ' + AVAILABLE_RAM + \
+            ' hdfs://' + HDFS_IP_PORT + '/SparkJobMigratory.jar --jars ' \
                 + SPARK_FOLDER + 'jars/*.jar'
+    print ">> EXECUTING: " + cmd
     proc = subprocess.Popen(cmd, shell=True)
     
     '''STEP 8: Clean files'''
@@ -185,4 +203,4 @@ def main(argv=None):
     
     
 if __name__ == "__main__":
-    sys.exit(main())     
+    sys.exit(main()) 
