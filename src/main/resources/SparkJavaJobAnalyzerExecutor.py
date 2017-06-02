@@ -16,20 +16,20 @@ import os
 import re
 
 
-URL_CRYSTAL_API = 'http://192.168.2.1:9000/'
-AUTH_URL='http://192.168.2.1:5000/v2.0'
-USERNAME='manager'
-PASSWORD='manager'
-TENANT='test'
-EXECUTOR_LOCATION = '/home/lab144/raul/'
+URL_CRYSTAL_API = 'http://IP:9000/'
+AUTH_URL='http://IP:5000/v2.0'
+USERNAME=''
+PASSWORD=''
+TENANT=''
+EXECUTOR_LOCATION = ''
 JAVAC_PATH = '/usr/bin/javac'
-SPARK_FOLDER = '/home/lab144/raul/spark-2.1.1-bin-hadoop2.7/'
+SPARK_FOLDER = '/something/spark-2.1.1-bin-hadoop2.7/'
 SPARK_LIBS_LOCATION = SPARK_FOLDER + 'jars/'
 LAMBDA_PUSHDOWN_FILTER = 'lambdapushdown-1.0.jar'
 AVAILABLE_RAM = '28G'
 AVAILABLE_CPUS = '20'
-HDFS_LOCATION = '/home/lab144/raul/hadoop-2.7.3/bin/hdfs dfs '
-HDFS_IP_PORT = '192.168.2.30:9000'
+HDFS_LOCATION = '/something/hadoop-2.7.3/bin/hdfs dfs '
+HDFS_IP_PORT = 'IP:9000'
 
 
 valid_token = None
