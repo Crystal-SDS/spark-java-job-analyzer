@@ -1,5 +1,6 @@
 package test.java.storlet;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import com.ibm.storlet.common.StorletOutputStream;
 
 public class TestStorlet {
 	
+
 	public static final String INPUT_FILE_NAME = "test_data/meter_gen.csv";
 	public static final String OUTPUT_FILE_NAME = "/dev/null"; // "test_data/meter.results";
 	public static final String OUTPUT_MD_FILE_NAME = "test_data/output_record_md.txt";
@@ -21,7 +23,8 @@ public class TestStorlet {
 	public static void main(String[] args) {
 		System.out.println("entering main");
 		try {
-
+			long inputBytes = new File(INPUT_FILE_NAME).length();
+			
 			FileInputStream infile = new FileInputStream(INPUT_FILE_NAME);
 			FileOutputStream outfile = new FileOutputStream(OUTPUT_FILE_NAME);
 			FileOutputStream outfile_md = new FileOutputStream(OUTPUT_MD_FILE_NAME);
@@ -43,6 +46,7 @@ public class TestStorlet {
 			Map<String, String> parameters = new HashMap<String, String>();	
 			
 			//parameters.put("1-lambda", "java.util.function.Predicate<java.lang.String>|filter(s -> s.contains(\"2015\"))");
+			//parameters.put("1-lambda", "java.util.function.Predicate<java.lang.String>|filter(s -> s.contains(\"Hamlet\"))");
 			//parameters.put("2-map", "s -> s + \"1234563564545\"");
 			//parameters.put("3-filter", "s -> s.contains(\"B\")");	
 			//parameters.put("4-map", "s -> s + \"aaaaaaaa\"");
@@ -51,7 +55,7 @@ public class TestStorlet {
 			System.out.println("before storlet");
 			long iniTime = System.nanoTime();
 			storlet.invoke(inputStreams, outStreams, parameters, logger);
-			System.out.println("after storlet: " + (System.nanoTime()-iniTime)/1000000.);			
+			System.out.println("after storlet: " + ((inputBytes/1024./1024.)/((System.nanoTime()-iniTime)/1000000000.)) + "MBps");			
 			
 			infile.close();
 			outfile.close();
@@ -72,7 +76,7 @@ public class TestStorlet {
 		        System.out.println("before storlet");
 		        iniTime = System.nanoTime();
 				storlet.invoke(inputStreams, outStreams, parameters, logger);
-				System.out.println("after storlet: " + (System.nanoTime()-iniTime)/1000000.);
+				System.out.println("after storlet: " + ((inputBytes/1024./1024.)/((System.nanoTime()-iniTime)/1000000000.)) + "MBps");
 		        
 		        infile.close();
 				outfile.close();
