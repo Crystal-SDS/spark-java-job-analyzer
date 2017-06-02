@@ -27,7 +27,7 @@ SPARK_FOLDER = '/home/lab144/raul/spark-2.1.1-bin-hadoop2.7/'
 SPARK_LIBS_LOCATION = SPARK_FOLDER + 'jars/'
 LAMBDA_PUSHDOWN_FILTER = 'lambdapushdown-1.0.jar'
 AVAILABLE_RAM = '28G'
-AVAILABLE_CPUS = '96'
+AVAILABLE_CPUS = '20'
 HDFS_LOCATION = '/home/lab144/raul/hadoop-2.7.3/bin/hdfs dfs '
 HDFS_IP_PORT = '192.168.2.30:9000'
 
@@ -147,7 +147,7 @@ def main(argv=None):
         #TODO: Maybe we have to handle error codes and do something
         print 'Response code of filter update: ' + str(update_filter_params(lambdasToMigrate))
         jobToCompile = pushdownJobCode
-    else: print 'Response code of filter update: ' + str(update_filter_params([]))
+    #else: print 'Response code of filter update: ' + str(update_filter_params([]))
     
     '''STEP 5: Compile pushdown/original job'''
     m = re.search('package\s*(\w\.?)*\s*;', jobToCompile)
@@ -188,8 +188,9 @@ def main(argv=None):
     '''STEP 7: Execute the job against Swift'''
     cmd = 'bash ' + SPARK_FOLDER+ 'bin/spark-submit --deploy-mode cluster --master spark://192.168.2.30:7077 ' + \
             '--class ' + EXECUTOR_LOCATION.replace('/','.')[1:] + 'SparkJobMigratory ' + \
-            '--driver-class-path ~/raul/spark-2.1.1-bin-hadoop2.7/jars/stocator-1.0.9.jar ' + \
-            '--total-executor-cores ' + AVAILABLE_CPUS + ' --executor-memory ' + AVAILABLE_RAM + \
+            '--driver-class-path ' + SPARK_FOLDER + 'jars/stocator-1.0.9.jar ' + \
+            '--conf spark.extraListeners=ch.cern.sparkmeasure.FlightRecorderStageMetrics,ch.cern.sparkmeasure.FlightRecorderTaskMetrics ' + \
+            '--executor-cores ' + AVAILABLE_CPUS + ' --executor-memory ' + AVAILABLE_RAM + \
             ' hdfs://' + HDFS_IP_PORT + '/SparkJobMigratory.jar --jars ' \
                 + SPARK_FOLDER + 'jars/*.jar'
     print ">> EXECUTING: " + cmd
@@ -203,4 +204,4 @@ def main(argv=None):
     
     
 if __name__ == "__main__":
-    sys.exit(main()) 
+    sys.exit(main())     
