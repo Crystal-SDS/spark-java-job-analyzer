@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,6 +25,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import com.ibm.storlet.common.IStorlet;
 import com.ibm.storlet.common.StorletException;
 import com.ibm.storlet.common.StorletInputStream;
 import com.ibm.storlet.common.StorletLogger;
@@ -58,7 +60,12 @@ import pl.joegreen.lambdaFromString.TypeReference;
  *
  */
 
-public class LambdaPushdownStorlet extends LambdaStreamsStorlet {
+public class LambdaPushdownStorlet implements IStorlet {
+	
+	protected final Charset CHARSET = Charset.forName("UTF-8");
+	protected final int BUFFER_SIZE = 128*1024;
+	
+	protected Map<String, String> parameters = null;
 	
 	protected LambdaFactory lambdaFactory = LambdaFactory.get();
 	
@@ -82,7 +89,6 @@ public class LambdaPushdownStorlet extends LambdaStreamsStorlet {
 		new CollectorCompilationHelper().initializeCollectorCache(collectorCache);
 	}
 
-	@Override
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected Stream writeYourLambdas(Stream<String> stream) {
 		long initime = System.currentTimeMillis();

@@ -33,7 +33,7 @@ import com.ibm.storlet.common.StorletOutputStream;
 public abstract class LambdaStreamsStorlet implements IStorlet {
 	
 	protected final Charset CHARSET = Charset.forName("UTF-8");
-	protected final int BUFFER_SIZE = 64*1024;
+	protected final int BUFFER_SIZE = 128*1024;
 	
 	protected Map<String, String> parameters = null;
 	
