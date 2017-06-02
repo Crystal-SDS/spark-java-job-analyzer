@@ -14,7 +14,7 @@ import com.ibm.storlet.common.StorletOutputStream;
 public class TestStorlet {
 	
 	public static final String INPUT_FILE_NAME = "test_data/meter_gen.csv";
-	public static final String OUTPUT_FILE_NAME = "test_data/meter.results";
+	public static final String OUTPUT_FILE_NAME = "/dev/null"; // "test_data/meter.results";
 	public static final String OUTPUT_MD_FILE_NAME = "test_data/output_record_md.txt";
 	public static final String LOGGER_FILE_NAME = "test_data/logger";	
 	
@@ -42,7 +42,7 @@ public class TestStorlet {
 			StorletLogger logger = new StorletLogger(loggerFile.getFD());				
 			Map<String, String> parameters = new HashMap<String, String>();	
 			
-			parameters.put("1-lambda", "java.util.function.Predicate<java.lang.String>|filter(s -> s.contains(\"2015\"))");
+			//parameters.put("1-lambda", "java.util.function.Predicate<java.lang.String>|filter(s -> s.contains(\"2015\"))");
 			//parameters.put("2-map", "s -> s + \"1234563564545\"");
 			//parameters.put("3-filter", "s -> s.contains(\"B\")");	
 			//parameters.put("4-map", "s -> s + \"aaaaaaaa\"");
