@@ -63,7 +63,7 @@ import pl.joegreen.lambdaFromString.TypeReference;
 public class LambdaPushdownStorlet implements IStorlet {
 	
 	protected final Charset CHARSET = Charset.forName("UTF-8");
-	protected final int BUFFER_SIZE = 128*1024;
+	protected final int BUFFER_SIZE = 8*1024;
 	
 	protected Map<String, String> parameters = null;
 	
@@ -76,11 +76,9 @@ public class LambdaPushdownStorlet implements IStorlet {
 	protected Map<String, Function> reducerCache = new HashMap<>();
 	
 	private Pattern lambdaBodyExtraction = Pattern.compile("(map|filter|flatMap|collect|reduce)\\s*?\\(");
-	//private Pattern intermediateLambdas = Pattern.compile("(map|filter|flatMap|collect|mapToPair|reduceByKey)");
-	//private Pattern terminalLambdas = Pattern.compile("(collect|count)");
 	
 	private static final String LAMBDA_TYPE_AND_BODY_SEPARATOR = "|";
-	//TODO: There is a problem using "," when passing lambdas as Storlet parameters, as the
+	//There is a problem using "," when passing lambdas as Storlet parameters, as the
 	//Storlet middleware treats every "," as a separation between key/value parameter pairs
 	private static final String COMMA_REPLACEMENT_IN_PARAMS = "'";
 	private static final String EQUAL_REPLACEMENT_IN_PARAMS = "$";
@@ -152,10 +150,10 @@ public class LambdaPushdownStorlet implements IStorlet {
         //Concatenate all the functions to be applied to a data stream
         Function allPushdownFunctions = pushdownFunctions.stream()
         		.reduce(c -> c, (c1, c2) -> (s -> c2.apply(c1.apply(s))));        
-
+        
+        Stream<Object> potentialTerminals =  Arrays.asList(pushdownCollector, pushdownReducer).stream();
+        
         System.out.println("Compilation time: " + (System.currentTimeMillis()-initime) + "ms");
-        Stream<Object> potentialTerminals = Arrays.asList((Object) pushdownCollector, 
-        												  (Object) pushdownReducer).stream();
         
         //Apply all the functions on each stream record
     	return hasTerminalLambda ? applyTerminalOperation((Stream) allPushdownFunctions.apply(stream), 
@@ -184,9 +182,9 @@ public class LambdaPushdownStorlet implements IStorlet {
 		//execute those lambdas on BufferedWriter/Readers, as we need to operate on text and
 		//do the encoding from bytes to strings. If there are no lambdas, we can directly manage
 		//byte streams, having much better throughput.
-		if (requestContainsLambdas(parameters)){
+		//if (requestContainsLambdas(parameters)){
 			applyLambdasOnDataStream(is, os, logger);
-		} else writeByteBasedStreams(is, os, logger); 
+		//} else writeByteBasedStreams(is, os, logger); 
 		
         long after = System.nanoTime();
 		logger.emitLog(this.getClass().getName() + " -- Elapsed [ms]: "+((after-before)/1000000L));			
@@ -200,8 +198,7 @@ public class LambdaPushdownStorlet implements IStorlet {
 			BufferedReader readBuffer = new BufferedReader(new InputStreamReader(is, CHARSET), BUFFER_SIZE); 
 			writeYourLambdas(readBuffer.lines().parallel()).forEach(line -> {	
 				try {
-					//FIXME: We have to call toString here to write a String from unknown Stream items
-					writeBuffer.write(line.toString());  
+					writeBuffer.write(line.toString());  //As we handle different types of object, invoke toString
 					writeBuffer.newLine();
 				}catch(IOException e){
 					logger.emitLog(this.getClass().getName() + " raised IOException: " + e.getMessage());
