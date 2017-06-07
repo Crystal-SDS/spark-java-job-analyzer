@@ -110,11 +110,10 @@ public class LambdaPushdownStorlet implements IStorlet {
         	//Get the signature of the function to compile
         	String lambdaTypeAndBody = parameters.get(functionKey).replace(COMMA_REPLACEMENT_IN_PARAMS, ",")
         														  .replace(EQUAL_REPLACEMENT_IN_PARAMS, "=");
-        	String lambdaType = lambdaTypeAndBody.substring(0, 
-        			lambdaTypeAndBody.indexOf(LAMBDA_TYPE_AND_BODY_SEPARATOR));
-        	String lambdaBody = lambdaTypeAndBody.substring(
-        			lambdaTypeAndBody.indexOf(LAMBDA_TYPE_AND_BODY_SEPARATOR)+1);
-        	System.out.println("**>>New lambda to pushdown: " + lambdaType + " ->>> " + lambdaBody);
+        	int separatorPos = lambdaTypeAndBody.indexOf(LAMBDA_TYPE_AND_BODY_SEPARATOR);
+        	String lambdaType = lambdaTypeAndBody.substring(0, separatorPos);
+        	String lambdaBody = lambdaTypeAndBody.substring(separatorPos+1);
+        	//System.out.println("**>>New lambda to pushdown: " + lambdaType + " ->>> " + lambdaBody);
         	
         	//Check if we have already compiled this lambda and exists in the cache
 			if (lambdaCache.containsKey(lambdaBody)) {
@@ -145,15 +144,20 @@ public class LambdaPushdownStorlet implements IStorlet {
 				pushdownFunctions.add(lambdaCache.get(lambdaBody));
 			}
         }
-        System.out.println("Number of lambdas to execute: " + pushdownFunctions.size());
+        //System.out.println("Number of lambdas to execute: " + pushdownFunctions.size());
+        
+        //Avoid overhead of composing functions
+        if (pushdownFunctions.size()==0 && !hasTerminalLambda) {
+        	//System.out.println("Compilation time: " + (System.currentTimeMillis()-initime) + "ms");
+        	return stream;
+        }
         
         //Concatenate all the functions to be applied to a data stream
         Function allPushdownFunctions = pushdownFunctions.stream()
-        		.reduce(c -> c, (c1, c2) -> (s -> c2.apply(c1.apply(s))));        
-        
+        		.reduce(c -> c, (c1, c2) -> (s -> c2.apply(c1.apply(s))));  
         Stream<Object> potentialTerminals =  Arrays.asList(pushdownCollector, pushdownReducer).stream();
         
-        System.out.println("Compilation time: " + (System.currentTimeMillis()-initime) + "ms");
+        //System.out.println("Compilation time: " + (System.currentTimeMillis()-initime) + "ms");
         
         //Apply all the functions on each stream record
     	return hasTerminalLambda ? applyTerminalOperation((Stream) allPushdownFunctions.apply(stream), 
@@ -208,7 +212,7 @@ public class LambdaPushdownStorlet implements IStorlet {
 			writeBuffer.close();
 			is.close();
 			os.close();
-			System.err.println(">>>>>>>>>>> Finishing writing with lambdas!!");
+			//System.err.println(">>>>>>>>>>> Finishing writing with lambdas!!");
 		} catch (IOException e1) {
 			logger.emitLog(this.getClass().getName() + " raised IOException 2: " + e1.getMessage());
 			e1.printStackTrace(System.err);
