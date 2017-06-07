@@ -155,7 +155,7 @@ public class LambdaPushdownStorlet implements IStorlet {
         //Concatenate all the functions to be applied to a data stream
         Function allPushdownFunctions = pushdownFunctions.stream()
         		.reduce(c -> c, (c1, c2) -> (s -> c2.apply(c1.apply(s))));  
-        Stream<Object> potentialTerminals =  Arrays.asList(pushdownCollector, pushdownReducer).stream();
+        Stream<Object> potentialTerminals = Arrays.asList(pushdownCollector, pushdownReducer).stream();
         
         //System.out.println("Compilation time: " + (System.currentTimeMillis()-initime) + "ms");
         
