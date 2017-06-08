@@ -7,11 +7,16 @@ import org.apache.spark.api.java.JavaSparkContext;
 
 import scala.Tuple2;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 public class SparkJavaWordCount {
 	
 	public static void main(String[] args) {
+		
+		long timeInMillis = System.currentTimeMillis();
 		
 		SparkConf conf = new SparkConf().setAppName("SparkJavaWordCount");
 		JavaSparkContext sc = new JavaSparkContext(conf);
@@ -24,5 +29,12 @@ public class SparkJavaWordCount {
 		    .reduceByKey((a, b) -> a + b);
 		
 		counts.saveAsTextFile("swift2d://data1.lvm/hamlet_result.txt");		
+		
+		try {
+			Files.write(Paths.get("./wordcount_result" + timeInMillis + ".dat"), 
+					String.valueOf(System.currentTimeMillis() - timeInMillis).getBytes());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

@@ -27,7 +27,7 @@ processed = 0
 lines = 0
 
 
-CHUNK_SIZE = 40
+CHUNK_SIZE = 1
 trace_chunk = open('./1_u1.csv', 'w')
 chunk_counter = 1
 
