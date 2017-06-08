@@ -63,7 +63,7 @@ import pl.joegreen.lambdaFromString.TypeReference;
 public class LambdaPushdownStorlet implements IStorlet {
 	
 	protected final Charset CHARSET = Charset.forName("UTF-8");
-	protected final int BUFFER_SIZE = 128*1024;
+	protected final int BUFFER_SIZE = 8*1024;
 	
 	protected Map<String, String> parameters = null;
 	
@@ -154,10 +154,9 @@ public class LambdaPushdownStorlet implements IStorlet {
         		.reduce(c -> c, (c1, c2) -> (s -> c2.apply(c1.apply(s))));        
 
         System.out.println("Compilation time: " + (System.currentTimeMillis()-initime) + "ms");
-        Stream<Object> potentialTerminals = Arrays.asList((Object) pushdownCollector, 
-        												  (Object) pushdownReducer).stream();
+        Stream<Object> potentialTerminals = Stream.of(pushdownCollector, pushdownReducer);
         
-        //Apply all the functions on each stream record
+        //Apply all the functions on each stream record and only one terminal operation
     	return hasTerminalLambda ? applyTerminalOperation((Stream) allPushdownFunctions.apply(stream), 
     			potentialTerminals.filter(f -> f!=null).findFirst().get()): 
     				(Stream) allPushdownFunctions.apply(stream);
@@ -184,9 +183,9 @@ public class LambdaPushdownStorlet implements IStorlet {
 		//execute those lambdas on BufferedWriter/Readers, as we need to operate on text and
 		//do the encoding from bytes to strings. If there are no lambdas, we can directly manage
 		//byte streams, having much better throughput.
-		if (requestContainsLambdas(parameters)){
+		//if (requestContainsLambdas(parameters)){
 			applyLambdasOnDataStream(is, os, logger);
-		} else writeByteBasedStreams(is, os, logger); 
+		//} else writeByteBasedStreams(is, os, logger); 
 		
         long after = System.nanoTime();
 		logger.emitLog(this.getClass().getName() + " -- Elapsed [ms]: "+((after-before)/1000000L));			

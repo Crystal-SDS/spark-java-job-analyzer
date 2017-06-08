@@ -15,7 +15,7 @@ import com.ibm.storlet.common.StorletOutputStream;
 public class TestStorlet {
 	
 	public static final String INPUT_FILE_NAME = "test_data/meter_gen_large.csv";
-	public static final String OUTPUT_FILE_NAME = "test_data/meter.results"; // "/dev/null"; //
+	public static final String OUTPUT_FILE_NAME = "/dev/null"; //"test_data/meter.results"; // 
 	public static final String OUTPUT_MD_FILE_NAME = "test_data/output_record_md.txt";
 	public static final String LOGGER_FILE_NAME = "test_data/logger";	
 	

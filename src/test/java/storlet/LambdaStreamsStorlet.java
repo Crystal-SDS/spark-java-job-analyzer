@@ -87,10 +87,10 @@ public abstract class LambdaStreamsStorlet implements IStorlet {
 			//Convert InputStream as a Stream, and apply lambdas
 			BufferedWriter writeBuffer = new BufferedWriter(new OutputStreamWriter(os, CHARSET), BUFFER_SIZE);
 			BufferedReader readBuffer = new BufferedReader(new InputStreamReader(is, CHARSET), BUFFER_SIZE); 
-			writeYourLambdas(readBuffer.lines()).forEach(line -> {	
+			writeYourLambdas(readBuffer.lines().parallel()).forEach(line -> {	
 				try {
-					writeBuffer.write(line.toString());  
-					writeBuffer.newLine();
+					writeBuffer.write(line.toString() + "\n");  
+					//writeBuffer.newLine();
 				}catch(IOException e){
 					logger.emitLog(this.getClass().getName() + " raised IOException: " + e.getMessage());
 					e.printStackTrace(System.err);
