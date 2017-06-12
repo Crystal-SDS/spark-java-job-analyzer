@@ -79,8 +79,7 @@ public class StatementsExtractor extends VoidVisitorAdapter<Object> {
 		
 		//Get the entire intermediate lambda functions that can be pushed down
 		int lastLambdaIndex = expressionString.indexOf(".");
-		for (Node n: lambdas){    					
-			System.out.println("Processing transformation: " + n);				
+		for (Node n: lambdas){    								
 			Pattern pattern = Pattern.compile("\\." + pushableTransformations + 
 								"+\\(?\\S+" + Pattern.quote(n.toString()) + "\\)");
 	        Matcher matcher = pattern.matcher(expressionString);
@@ -115,7 +114,6 @@ public class StatementsExtractor extends VoidVisitorAdapter<Object> {
 			 Matcher matcher = p.matcher(trans);
 			 if (matcher.lookingAt()) {
 				 identifiedStreams.get(streamKeyString).appendOperationToRDD(trans, noneType, false);
-				 System.out.println(">>ADDING: " + trans);
 				 lastLambdaIndex += matcher.end()+1;
 			 }else break;
 		}
@@ -160,7 +158,7 @@ public class StatementsExtractor extends VoidVisitorAdapter<Object> {
 		for (String trans: nonLambdaTrans){
 			//TODO: Fix this with a proper type for non lambda trans?
 			matchedLambda = matchedLambda.replace(trans + ".", "");
-			identifiedStreams.get(streamKeyString).appendOperationToRDD(trans, "None<>", false);
+			identifiedStreams.get(streamKeyString).appendOperationToRDD(trans, noneType, false);
 		}
         //We are treating reduce operations as final operations, but we need to know the types of inner lambdas
         if (matchedLambda.startsWith("reduce")){

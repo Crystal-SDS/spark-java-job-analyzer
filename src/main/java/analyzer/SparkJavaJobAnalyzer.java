@@ -95,9 +95,6 @@ public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
         } catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-        System.out.println("-------------------");
-        System.out.println(translatedJobCode.replace("; ", ";\n").replace("{", "{\n"));
-        System.out.println("-------------------");
         
         //Execute the JavaStreams analyzer on the translated job
         JavaStreamsJobAnalyzer javaStreamsAnalyzer = new JavaStreamsJobAnalyzer();
@@ -106,12 +103,9 @@ public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
         List<SimpleEntry<String, String>> lambdasToMigrate = Utils.getLambdasToMigrate(result);
         String modifiedJobCode =  originalJobCode;
         
-        System.out.println(Utils.getModifiedJobCode(result));
-        
         LambdaRule pushdownLambdaRule = null;
         for (String rddName: identifiedStreams.keySet()){
 	        for (GraphNode node: identifiedStreams.get(rddName)){  
-	        	System.out.println(reverseRulesPackage + ": " + node.toString());
 	        	String functionName = node.getFunctionName();
 	        	for (SimpleEntry<String, String> theLambda: lambdasToMigrate){
 	        		if (node.getCodeReplacement().equals(theLambda.getKey())){

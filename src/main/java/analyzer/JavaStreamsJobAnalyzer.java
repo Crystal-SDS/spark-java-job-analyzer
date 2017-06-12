@@ -152,7 +152,6 @@ public class JavaStreamsJobAnalyzer {
 	protected void applyRulesToControlFlowGraph(FlowControlGraph flowControlGraph, String rulesPackage) {
         LambdaRule pushdownLambdaRule = null;
         for (GraphNode node: flowControlGraph){  
-        	System.out.println(rulesPackage + ": " + node.toString());
         	String functionName = node.getFunctionName();
 			try {
 				//Instantiate the class that contains the rules to pushdown a given lambda
