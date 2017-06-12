@@ -33,6 +33,9 @@ public class StatementsExtractor extends VoidVisitorAdapter<Object> {
 	private String pushableActions;
 	private JavaParserFacade javaParserFacade;
 	
+	private static final String noneType = "None<>";
+	private static final String nonLambdaTransformations = "(distinct\\(\\)|groupByKey\\(\\)|limit\\(\\w\\))";
+	
 	public StatementsExtractor(Map<String, FlowControlGraph> identifiedStreams,
 			String pushableIntermediateLambdas, String pushableTerminalLambdas,
 				JavaParserFacade javaParserFacade) {
@@ -90,7 +93,14 @@ public class StatementsExtractor extends VoidVisitorAdapter<Object> {
 	        //Delete useless white spaces that mess string comparisons
 	        matchedLambda = Utils.stripSpace(matchedLambda);
 			//Take advantage of this pass to try to infer the types of the lambdas
-	        String lambdaType = getLambdaTypeFromNode(n);
+	        String lambdaType = noneType;
+	        try {
+	        	lambdaType = getLambdaTypeFromNode(n);
+	        }catch(RuntimeException e){
+	        	System.err.println("Warning: Error inferring type of lambda " + n);
+	        	System.err.println("This type may not be needed, so we continue with the execution. "
+	        			+ "If we need this type for the pushdown process, we will rise an exception afterwards.");
+	        }
 			//Add the lambda to the graph, as well as potential non-lambda method calls before it
 			addLambdaToGraph(streamKeyString, n, matchedLambda, lambdaType);
 	        lastLambdaIndex = matcher.end();
@@ -100,11 +110,11 @@ public class StatementsExtractor extends VoidVisitorAdapter<Object> {
 		
 		//Get the non-lambda transformations between the lambdas and the terminal action
 		//FIXME: Put this literal in an appropriate place
-		Pattern p = Pattern.compile("(distinct\\(\\)|groupByKey\\(\\)|limit\\(\\w\\))");		
+		Pattern p = Pattern.compile(nonLambdaTransformations);		
 		for (String trans: Arrays.asList(expressionString.substring(lastLambdaIndex+1).split("\\."))){
 			 Matcher matcher = p.matcher(trans);
 			 if (matcher.lookingAt()) {
-				 identifiedStreams.get(streamKeyString).appendOperationToRDD(trans, "None<>", false);
+				 identifiedStreams.get(streamKeyString).appendOperationToRDD(trans, noneType, false);
 				 System.out.println(">>ADDING: " + trans);
 				 lastLambdaIndex += matcher.end()+1;
 			 }else break;

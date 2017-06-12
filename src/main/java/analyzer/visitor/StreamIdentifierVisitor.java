@@ -39,11 +39,11 @@ public class StreamIdentifierVisitor extends ModifierVisitor<Void> {
 		Matcher matcherParameterized = datasetsParameterizedPattern.matcher(declarator.getType().toString());
 		//Check if we found and in memory data structure like an RDD
      	if (matcherSimple.matches() || matcherParameterized.lookingAt()){
-     		String streamName = declarator.getChildNodes().get(0).toString();
+     		String streamName = declarator.getChildNodes().get(1).toString();
      		FlowControlGraph graph = new FlowControlGraph(streamName);
      		graph.setType(declarator.getType().toString());
      		identifiedStreams.put(streamName, graph);
-     		String streamAssignment = declarator.getChildNodes().get(1).toString().trim();
+     		String streamAssignment = declarator.getChildNodes().get(2).toString().trim();
      		//Maybe there is an even simpler way of doing this
      		Optional<String> referencedRDD = Arrays.stream(streamAssignment.split("\\."))
      											.filter(s -> identifiedStreams.containsKey(s))

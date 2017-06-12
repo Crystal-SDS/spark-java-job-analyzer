@@ -17,7 +17,7 @@
 		<dependency>
 		    <groupId>com.github.javaparser</groupId>
 		    <artifactId>java-symbol-solver-core</artifactId>
-		    <version>0.5.4</version>
+		    <version>0.5.5</version>
 		</dependency>
 
 
@@ -25,14 +25,14 @@
 		<dependency>
 		    <groupId>com.github.javaparser</groupId>
 		    <artifactId>java-symbol-solver-model</artifactId>
-		    <version>0.5.4</version>
+		    <version>0.5.5</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.github.javaparser/java-symbol-solver-logic -->
 		<dependency>
 		    <groupId>com.github.javaparser</groupId>
 		    <artifactId>java-symbol-solver-logic</artifactId>
-		    <version>0.5.4</version>
+		    <version>0.5.5</version>
 		</dependency>
  
 		<dependency>

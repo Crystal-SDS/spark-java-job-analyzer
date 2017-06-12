@@ -102,6 +102,8 @@ public class LambdaTypeParser {
 					inferredArgument + " in " + node.getLambdaSignature());
 			System.err.println("We are going to fallback to typeString, but "
 					+ "this may crash at the server side!");
+			//FIXME: Bug with JSS on String split method
+			if (node.getLambdaSignature().contains(".split")) return "java.lang.String[]";
 			return "java.lang.String";
 		}		
 		return inferredArgument;
@@ -113,6 +115,8 @@ public class LambdaTypeParser {
 						node.getLambdaSignature());
 			System.err.println("We are going to fallback to typeString, but this may "
 					+ "crash at the server side!");
+			//FIXME: Bug with JSS on String split method
+			if (node.getLambdaSignature().contains(".split")) return Arrays.asList("java.lang.String[]");
 			return Arrays.asList("java.lang.String");
 		}
 		return nextNodeArguments;

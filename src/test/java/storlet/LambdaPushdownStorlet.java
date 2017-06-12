@@ -11,7 +11,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -185,9 +184,9 @@ public class LambdaPushdownStorlet implements IStorlet {
 		//execute those lambdas on BufferedWriter/Readers, as we need to operate on text and
 		//do the encoding from bytes to strings. If there are no lambdas, we can directly manage
 		//byte streams, having much better throughput.
-		//if (requestContainsLambdas(parameters)){
+		if (requestContainsLambdas(parameters)){
 			applyLambdasOnDataStream(is, os, logger);
-		//} else writeByteBasedStreams(is, os, logger); 
+		} else writeByteBasedStreams(is, os, logger); 
 		
         long after = System.nanoTime();
 		logger.emitLog(this.getClass().getName() + " -- Elapsed [ms]: "+((after-before)/1000000L));			
