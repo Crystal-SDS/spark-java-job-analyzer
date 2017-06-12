@@ -18,9 +18,9 @@ public class ActionModificationRuleSpark implements LambdaRule{
 			if (graphNode.getMyRDD().getType().startsWith("JavaPairRDD") ||
 					graphNode.getMyRDD().getType().startsWith("JavaPairDStream")) 
 				conversionFunction = "mapToPair";
-				graphNode.setCodeReplacement(conversionFunction + 
-					"(s -> " + instantiationSignature(lastParameter.trim()) + ")."
-						+ graphNode.getLambdaSignature());
+			graphNode.setCodeReplacement(conversionFunction + 
+				"(s -> " + instantiationSignature(lastParameter.trim()) + ")."
+					+ graphNode.getLambdaSignature());
 		} else graphNode.setCodeReplacement(graphNode.getLambdaSignature());
 	}
 

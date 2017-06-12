@@ -30,7 +30,7 @@ public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
 			//+ "(\\s*?(<\\s*?\\w*\\s*?(,\\s*?\\w*\\s*?)?\\s*?>))?"; //\\s*?\\w*\\s*?=";
 	
 	protected final String pushableTransformations = "(map|filter|flatMap|mapToPair|reduceByKey|reduce|distinct|groupByKey)";
-	protected final String pushableActions = "(collect|count|iterator|foreach|cache)";
+	protected final String pushableActions = "(collect|count|foreach|cache)";
 	
 	protected final String translationRulesPackage = "main.java.rules.translation." + jobType  + ".";
 	protected final String reverseRulesPackage = "main.java.rules.reverse." + jobType  + ".";
@@ -109,6 +109,11 @@ public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
 	        	String functionName = node.getFunctionName();
 	        	for (SimpleEntry<String, String> theLambda: lambdasToMigrate){
 	        		if (node.getCodeReplacement().equals(theLambda.getKey())){
+		        		System.out.println("-----------------");
+		        		System.out.println(theLambda);
+		        		System.out.println(theLambda.getKey());
+		        		System.out.println(node.getCodeReplacement());
+		        		System.out.println("-----------------");
 	        			try {
 							//Instantiate the class that contains the rules to pushdown a given lambda
 							pushdownLambdaRule = (LambdaRule) Class.forName(

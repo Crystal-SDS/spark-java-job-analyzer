@@ -6,6 +6,7 @@ import org.json.simple.JSONObject;
 
 import junit.framework.TestCase;
 import main.java.analyzer.SparkJavaJobAnalyzer;
+import main.java.compiler.JobCompiler;
 import main.java.utils.Utils;
 
 public class SparkU1UserClusteringTest extends TestCase{	
@@ -25,6 +26,9 @@ public class SparkU1UserClusteringTest extends TestCase{
         System.out.println("LAMBDAS TO MIGRATE FROM SPARK:");
         System.out.println(Utils.getLambdasToMigrate(pushdownAnalysisResult));
         System.out.println("MODIFIED SPARK JOB:");
-        System.out.println(Utils.getModifiedJobCode(pushdownAnalysisResult));
+        String modifiedJobCode = Utils.getModifiedJobCode(pushdownAnalysisResult);
+        System.out.println(modifiedJobCode);
+                
+        
 	}	
 }

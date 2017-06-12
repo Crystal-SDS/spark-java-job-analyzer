@@ -76,7 +76,14 @@ public class StatementsExtractor extends VoidVisitorAdapter<Object> {
 		
 		//Store the lambdas in the correct order, as they are executed
 		Collections.reverse(lambdas);
-		
+
+		Pattern actionsPattern = Pattern.compile("\\." + pushableActions);
+		int actionPos = Integer.MAX_VALUE;
+		Matcher actionMatcher = actionsPattern.matcher(expressionString);
+		System.err.println(expressionString);
+		if (actionMatcher.find())
+			actionPos = actionMatcher.start();
+				
 		//Get the entire intermediate lambda functions that can be pushed down
 		int lastLambdaIndex = expressionString.indexOf(".");
 		for (Node n: lambdas){    								
@@ -84,7 +91,7 @@ public class StatementsExtractor extends VoidVisitorAdapter<Object> {
 								"+\\(?\\S+" + Pattern.quote(n.toString()) + "\\)");
 	        Matcher matcher = pattern.matcher(expressionString);
 	        //Add these lambda calls to the list of calls for the particular stream
-        	if (!matcher.find()) {
+        	if (!matcher.find() || lastLambdaIndex >= actionPos) {
         		System.err.println("Finished parsing lambdas when found: " + n);
         		break;
         	}
@@ -119,8 +126,7 @@ public class StatementsExtractor extends VoidVisitorAdapter<Object> {
 		}
 		
 		//Get the first (and last) terminal action
-		Pattern pattern = Pattern.compile("\\." + pushableActions);
-		Matcher actionMatcher = pattern.matcher(expressionString.substring(lastLambdaIndex));
+		actionMatcher = actionsPattern.matcher(expressionString.substring(lastLambdaIndex));
 		//We enable only a single collector in the expression, if it does exist
 		if (actionMatcher.find()){
 			int pos = lastLambdaIndex+actionMatcher.end()+1;

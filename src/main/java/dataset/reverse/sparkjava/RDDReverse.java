@@ -15,6 +15,7 @@ public class RDDReverse implements SparkDatasetTranslation{
 		jobCode = jobCode.replace("java.util.stream.Stream", "org.apache.spark.api.java." + mainType);
 		//Change the type declaration of the variable
 		String newDataseType = datasetType.replace("Stream", mainType);
+		newDataseType = datasetType.replace("Tuple2", "SimpleEntry");
 		return jobCode.replaceAll(currenType + "\\s*" + datasetName, newDataseType + " " + datasetName);		
 	}
 
