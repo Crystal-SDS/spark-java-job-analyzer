@@ -14,7 +14,7 @@ import com.ibm.storlet.common.StorletOutputStream;
 
 public class TestStorlet {
 	
-	public static final String INPUT_FILE_NAME = "test_data/meter_gen_large.csv";
+	public static final String INPUT_FILE_NAME = "test_data/1_u1.csv";
 	public static final String OUTPUT_FILE_NAME = "/dev/null"; //"test_data/meter.results"; // 
 	public static final String OUTPUT_MD_FILE_NAME = "test_data/output_record_md.txt";
 	public static final String LOGGER_FILE_NAME = "test_data/logger";	
@@ -44,7 +44,18 @@ public class TestStorlet {
 			StorletLogger logger = new StorletLogger(loggerFile.getFD());				
 			Map<String, String> parameters = new HashMap<String, String>();	
 			
-			parameters.put("1-lambda", "java.util.function.Predicate<java.lang.String>|filter(s -> s.contains(\"Hamlet\"))");
+			//parameters.put("1-lambda", "java.util.function.Predicate<java.lang.String>|filter(s -> s.contains(\"Hamlet\"))");
+			parameters.put("0-lambda", "java.util.function.Predicate<java.lang.String>|filter(s -> s.startsWith(\"storage_done\"))");
+			parameters.put("1-lambda", "java.util.function.Function<java.lang.String\' java.util.List<java.lang.String>>|"
+					+ "map(s -> java.util.Arrays.asList(s.split(\"\'\")))");
+			parameters.put("2-lambda", "java.util.function.Predicate<java.util.List<java.lang.String>>|filter(s -> s.get(19).equals(\"PutContentResponse\") "
+					+ "|| s.get(19).equals(\"GetContentResponse\") || s.get(19).equals(\"MakeResponse\") || s.get(19).equals(\"Unlink\") || "
+					+ "s.get(19).equals(\"MoveResponse\"))");			
+			/*parameters.put("3-lambda", "java.util.function.Function<java.util.List<java.lang.String>\' "
+					+ "java.util.AbstractMap.SimpleEntry<java.lang.String\' java.lang.Integer>>|"
+					+ "map(s -> new SimpleEntry<String\' Integer>(s.get(33) + \"-\" + s.get(19)\' 1))");
+			parameters.put("4-lambda", "Collector|collect(java.util.stream.Collectors.groupingBy("
+					+ "SimpleEntry<String' Integer>::getKey' java.util.stream.Collectors.counting()))");*/
 			//parameters.put("1-lambda", "java.util.function.Predicate<java.lang.String>|filter(s -> s.contains(\"Hamlet\"))");
 			//.put("2-lambda", "java.util.function.Function<java.lang.String, java.lang.String>|map(s ->  \"1234563564545\")");
 			//parameters.put("3-filter", "s -> s.contains(\"B\")");	
