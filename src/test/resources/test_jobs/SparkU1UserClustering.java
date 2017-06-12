@@ -4,8 +4,9 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-
+import org.apache.spark.mllib.clustering.KMeansModel;
 import org.apache.spark.mllib.linalg.Vectors;
+import org.apache.spark.mllib.clustering.KMeans;
 import org.apache.spark.mllib.linalg.Vector;
 
 import scala.Tuple2;
@@ -30,7 +31,7 @@ public static void main(String[] args) {
 					new Tuple2<String, Integer>(t._1.split("-")[1], t._2)));
 		
 		//Next, we have to convert these tuples into (user, [count_op1, count_op2,...]) for the clustering algorithm
-		userOpsTuples.groupByKey().map(t -> {
+		JavaRDD<Vector> userOpsVectors = userOpsTuples.groupByKey().map(t -> {
 			double[] values = new double[5];
 	    	for (Tuple2<String, Integer> theTuple: t._2) {
 	    		switch (theTuple._1) {
@@ -53,7 +54,26 @@ public static void main(String[] args) {
 						break;
 				}
 	    	}
-		    return new Tuple2<String, Vector>(t._1, Vectors.dense(values));
-		}).saveAsTextFile("/home/user/Desktop/result.csv");	
+		    return Vectors.dense(values);
+		});	
+		
+		// Cluster the data into two classes using KMeans
+		int numClusters = 5;
+		int numIterations = 20;
+		KMeansModel clusters = KMeans.train(userOpsVectors.rdd(), numClusters, numIterations);
+
+		System.out.println("Cluster centers:");
+		for (Vector center: clusters.clusterCenters()) {
+		  System.out.println(" " + center);
+		}
+		double cost = clusters.computeCost(userOpsVectors.rdd());
+		System.out.println("Cost: " + cost);
+
+		// Evaluate clustering by computing Within Set Sum of Squared Errors
+		double WSSSE = clusters.computeCost(userOpsVectors.rdd());
+		System.out.println("Within Set Sum of Squared Errors = " + WSSSE);
+
+		// Save and load model
+		clusters.save(sc.sc(), "/home/user/Desktop/KMeansModel");
 	}
 }
