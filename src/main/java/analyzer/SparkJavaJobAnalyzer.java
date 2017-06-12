@@ -109,11 +109,6 @@ public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
 	        	String functionName = node.getFunctionName();
 	        	for (SimpleEntry<String, String> theLambda: lambdasToMigrate){
 	        		if (node.getCodeReplacement().equals(theLambda.getKey())){
-		        		System.out.println("-----------------");
-		        		System.out.println(theLambda);
-		        		System.out.println(theLambda.getKey());
-		        		System.out.println(node.getCodeReplacement());
-		        		System.out.println("-----------------");
 	        			try {
 							//Instantiate the class that contains the rules to pushdown a given lambda
 							pushdownLambdaRule = (LambdaRule) Class.forName(
