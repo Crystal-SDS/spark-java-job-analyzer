@@ -115,7 +115,6 @@ public class StatementsExtractor extends VoidVisitorAdapter<Object> {
 		if (!expressionString.substring(lastLambdaIndex).contains(".")) return;
 		
 		//Get the non-lambda transformations between the lambdas and the terminal action
-		//FIXME: Put this literal in an appropriate place
 		Pattern p = Pattern.compile(nonLambdaTransformations);		
 		for (String trans: Arrays.asList(expressionString.substring(lastLambdaIndex+1).split("\\."))){
 			 Matcher matcher = p.matcher(trans);

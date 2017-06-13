@@ -1,6 +1,9 @@
 package test.resources.test_jobs;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -23,14 +26,19 @@ public static void main(String[] args) {
 
 		//Here we have items in tuplesPair as (user, (op_name, count))
 		JavaPairRDD<String, Tuple2<String, Integer>> userOpsTuples = distFile
-			.filter(s -> s.startsWith("storage_done"))
-			.map(s -> Arrays.asList(s.split(",")))
-			.filter(s -> s.get(19).equals("PutContentResponse") || s.get(19).equals("GetContentResponse") ||
-					s.get(19).equals("MakeResponse") || s.get(19).equals("Unlink") || s.get(19).equals("MoveResponse"))
-			.mapToPair(s -> new Tuple2<String, Integer>(s.get(33) + "-" + s.get(19), 1))
-			.reduceByKey((a, b) -> a + b)
-			.mapToPair(t -> new Tuple2<String, Tuple2<String, Integer>>(t._1.split("-")[0], 
-					new Tuple2<String, Integer>(t._1.split("-")[1], t._2)));
+				.filter(s -> s.startsWith("storage_done"))
+				.map(s -> {
+					java.util.List<String> l = new ArrayList<String>(); //This should change to a simple split after JSS bugfix
+					String[] a = s.split(",");
+					for (String x: a) l.add(x); 
+					return l;
+				})
+				.filter(s -> s.get(19).equals("PutContentResponse") || s.get(19).equals("GetContentResponse") ||
+						s.get(19).equals("MakeResponse") || s.get(19).equals("Unlink") || s.get(19).equals("MoveResponse"))
+				.mapToPair(s -> new Tuple2<String, Integer>(s.get(33) + "-" + s.get(19), 1))
+				.reduceByKey((a, b) -> a + b)
+				.mapToPair(t -> new Tuple2<String, Tuple2<String, Integer>>(t._1.split("-")[0], 
+						new Tuple2<String, Integer>(t._1.split("-")[1], t._2)));
 		
 		//Next, we have to convert these tuples into (user, [count_op1, count_op2,...]) for the clustering algorithm
 		JavaRDD<Vector> userOpsVectors = userOpsTuples.groupByKey().map(t -> {
@@ -71,6 +79,6 @@ public static void main(String[] args) {
 		System.out.println("Within Set Sum of Squared Errors = " + WSSSE);
 
 		// Save and load model
-		clusters.save(sc.sc(), "/home/user/Desktop/KMeansModel");
+		clusters.save(sc.sc(), "swift2d://data1.lvm/U1KMeans");
 	}
 }

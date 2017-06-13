@@ -34,6 +34,7 @@ public class SafeLambdaMigrationFinder {
 			GraphNode lastSecureNode = null;
 			while (nodeIterator.hasNext()){
 				lastSecureNode = nodeIterator.next();
+				System.out.println("**************: " + lastSecureNode.getLambdaSignature());
 				//Basically, if there are RDDs that are assigned from this point in the graph or there is a terminal
 				//operation, just avoid migrating lambdas to the storage
 				if (!lastSecureNode.getAssignedRDDs().isEmpty() || lastSecureNode.isTerminal()){
