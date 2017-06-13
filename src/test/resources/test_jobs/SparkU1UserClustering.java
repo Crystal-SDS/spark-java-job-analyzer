@@ -37,20 +37,15 @@ public static void main(String[] args) {
 			double[] values = new double[5];
 	    	for (Tuple2<String, Integer> theTuple: t._2) {
 	    		switch (theTuple._1) {
-					case "PutContentResponse":
-						values[0] = theTuple._2;
+					case "PutContentResponse": values[0] = theTuple._2;
 						break;
-					case "GetContentResponse":
-						values[1] = theTuple._2;
+					case "GetContentResponse": values[1] = theTuple._2;
 						break;
-					case "MakeResponse":
-						values[2] = theTuple._2;
+					case "MakeResponse": values[2] = theTuple._2;
 						break;
-					case "Unlink":
-						values[3] = theTuple._2;
+					case "Unlink": values[3] = theTuple._2;
 						break;
-					case "MoveResponse":
-						values[4] = theTuple._2;
+					case "MoveResponse": values[4] = theTuple._2;
 						break;
 					default:
 						break;
