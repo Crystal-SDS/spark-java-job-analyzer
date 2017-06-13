@@ -80,16 +80,18 @@ public class LambdaTypeParser {
 				arguments.add(0,inferredArgument);
 			//If we have to infer the second argument, look onwards on graph						
 			}else if (i==SECOND_ARGUMENT){
-				List<String> nextNodeArguments = new LambdaTypeParser(
-						node.getNextNode().getFunctionType()).getArguments();
-				//Check if previous node has arguments
-				nextNodeArguments = checkArgument(nextNodeArguments, node);
-				//Check if the argument is correct	
-				inferredArgument = checkArgument(nextNodeArguments.get(0), node);
-				if (lambdaMethod.equals("flatMap")) {
-					inferredArgument = "Stream<"+inferredArgument.substring(0)+">";
+				if (node.getNextNode()!=null) {
+					List<String> nextNodeArguments = new LambdaTypeParser(
+							node.getNextNode().getFunctionType()).getArguments();
+					//Check if previous node has arguments
+					nextNodeArguments = checkArgument(nextNodeArguments, node);
+					//Check if the argument is correct	
+					inferredArgument = checkArgument(nextNodeArguments.get(0), node);
+					if (lambdaMethod.equals("flatMap")) {
+						inferredArgument = "Stream<"+inferredArgument.substring(0)+">";
+					}
+					if (arguments.size() > 1) arguments.remove(arguments.size()-1);
 				}
-				if (arguments.size() > 1) arguments.remove(arguments.size()-1);
 				arguments.add(inferredArgument);
 			}		
 		}		
@@ -102,9 +104,7 @@ public class LambdaTypeParser {
 					inferredArgument + " in " + node.getLambdaSignature());
 			System.err.println("We are going to fallback to typeString, but "
 					+ "this may crash at the server side!");
-			//FIXME: Bug with JSS on String split method
-			//if (node.getLambdaSignature().contains(".split")) return "java.lang.String[]";
-			return "java.lang.String";
+			return "java.lang.String[]";
 		}		
 		return inferredArgument;
 	}
@@ -115,9 +115,7 @@ public class LambdaTypeParser {
 						node.getLambdaSignature());
 			System.err.println("We are going to fallback to typeString, but this may "
 					+ "crash at the server side!");
-			//FIXME: Bug with JSS on String split method
-			//if (node.getLambdaSignature().contains(".split")) return Arrays.asList("java.lang.String[]");
-			return Arrays.asList("java.lang.String");
+			return Arrays.asList("java.lang.String[]");
 		}
 		return nextNodeArguments;
 	}
