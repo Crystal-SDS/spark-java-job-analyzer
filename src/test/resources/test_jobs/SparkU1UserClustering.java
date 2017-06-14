@@ -1,10 +1,5 @@
 package test.resources.test_jobs;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -28,7 +23,7 @@ public static void main(String[] args) {
 		JavaPairRDD<String, Tuple2<String, Integer>> userOpsTuples = distFile
 				.filter(s -> s.startsWith("storage_done"))
 				.map(s -> {
-					java.util.List<String> l = new ArrayList<String>(); //This should change to a simple split after JSS bugfix
+					java.util.List<String> l = new java.util.ArrayList<String>(); //This should change to a simple split after JSS bugfix
 					String[] a = s.split(",");
 					for (String x: a) l.add(x); 
 					return l;
@@ -79,6 +74,6 @@ public static void main(String[] args) {
 		System.out.println("Within Set Sum of Squared Errors = " + WSSSE);
 
 		// Save and load model
-		clusters.save(sc.sc(), "swift2d://data1.lvm/U1KMeans");
+		clusters.save(sc.sc(), "swift2d://data1.lvm/");
 	}
 }
