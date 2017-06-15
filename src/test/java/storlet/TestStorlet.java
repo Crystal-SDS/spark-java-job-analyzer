@@ -45,7 +45,7 @@ public class TestStorlet {
 			Map<String, String> parameters = new HashMap<String, String>();	
 			
 			//parameters.put("1-lambda", "java.util.function.Predicate<java.lang.String>|filter(s -> s.contains(\"Hamlet\"))");
-			parameters.put("0-lambda", "java.util.function.Predicate<java.lang.String>|filter(s -> s.startsWith(\"storage_done\") "
+			/*parameters.put("0-lambda", "java.util.function.Predicate<java.lang.String>|filter(s -> s.startsWith(\"storage_done\") "
 					+ "&& (s.contains(\"PutContentResponse\") || s.contains(\"GetContentResponse\") || s.contains(\"MakeResponse\") || "
 					+ "s.contains(\"Unlink\") || s.contains(\"MoveResponse\")))");
 			//parameters.put("1-lambda", "java.util.function.Function<java.lang.String' java.lang.String[]>|"
@@ -59,12 +59,23 @@ public class TestStorlet {
 					+ "java.util.AbstractMap.SimpleEntry<java.lang.String\' java.lang.Integer>>|"
 					+ "map(s -> new SimpleEntry<String\' Integer>(s.get(33) + \"-\" + s.get(19)\' 1))");
 			parameters.put("4-lambda", "Collector|collect(java.util.stream.Collectors.groupingBy("
-					+ "SimpleEntry<String' Integer>::getKey' java.util.stream.Collectors.counting()))");
+					+ "SimpleEntry<String' Integer>::getKey' java.util.stream.Collectors.counting()))");*/
 
 			//parameters.put("1-lambda", "java.util.function.Predicate<java.lang.String>|filter(s -> s.contains(\"Hamlet\"))");
 			//.put("2-lambda", "java.util.function.Function<java.lang.String, java.lang.String>|map(s ->  \"1234563564545\")");
 			//parameters.put("3-filter", "s -> s.contains(\"B\")");	
-			//parameters.put("4-map", "s -> s + \"aaaaaaaa\"");
+			parameters.put("0-lambda", "java.util.function.Function<java.lang.String' java.util.stream.Stream<java.lang.String>>|" +
+						"flatMap(s -> java.util.stream.Stream.of(s.split(\",\")))");
+			//parameters.put("1-lambda", "java.util.function.Function<java.lang.String' java.lang.String>|"
+			//		+"map(word -> word.replaceAll(\"[^a-zA-Z]\"' \"\").toLowerCase().trim())");
+			parameters.put("1-lambda", "java.util.function.Predicate<java.lang.String>|"
+					+ "filter(s -> { int len $ s.length(); if (len $$ 0) return false; for (int i $ 0; i < len; i++) "
+					+ "if (Character.isAlphabetic(s.charAt(i))) return false; return true; })");
+			parameters.put("2-lambda", "java.util.function.Function<java.lang.String' java.util.AbstractMap.SimpleEntry<java.lang.String' "
+					+ "java.lang.Integer>>|map(word -> new SimpleEntry<String' Integer>(word' 1))");
+			parameters.put("3-lambda", "=Collector|collect(java.util.stream.Collectors.groupingBy("
+					+ "SimpleEntry<String' Integer>::getKey' java.util.stream.Collectors.counting()))");
+			
 			//parameters.put("5-filter", "s -> s.contains(\"A\")");	
 			
 			System.out.println("before storlet");

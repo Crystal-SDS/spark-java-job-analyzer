@@ -24,7 +24,13 @@ public class SparkJavaWordCount {
 		JavaRDD<String> textFile = sc.textFile("swift2d://data1.lvm/hamlet.txt");
 		JavaPairRDD<String, Integer> counts = textFile
 		    .flatMap(s -> Arrays.asList(s.split(" ")).iterator())
-		    .map(word -> word.replaceAll("[^a-zA-Z]", "").toLowerCase().trim())
+		    .filter(s -> { //This is more efficient than replaceAll with reggex
+		    	int len = s.length();
+		    	if (len==0) return false;
+		    	for (int i=0; i<len; i++) 
+		    		if (Character.isAlphabetic(s.charAt(i))) return false;
+		    	return true;
+		    })
 		    .mapToPair(word -> new Tuple2<String, Integer>(word, 1))
 		    .reduceByKey((a, b) -> a + b);
 		

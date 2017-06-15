@@ -27,7 +27,8 @@ processed = 0
 lines = 0
 
 
-CHUNK_SIZE = 1
+CHUNK_SIZE_IN_MB = 1
+DATASET_SIZE_IN_MB = 10
 trace_chunk = open('./1_u1.csv', 'w')
 chunk_counter = 1
 
@@ -40,9 +41,11 @@ with gzip.open(DATASET_PATH, 'rt') as f:
         processed+=len(l)
         
         size_module = int(processed/(1024*1024))        
-        if size_module>0 and size_module%CHUNK_SIZE==0 and size_module>old_size_module:
+        if size_module>0 and size_module%CHUNK_SIZE_IN_MB==0 and size_module>old_size_module:
             gc.collect() 
             trace_chunk.close()
+            if DATASET_SIZE_IN_MB <= (chunk_counter*CHUNK_SIZE_IN_MB):
+                return
             chunk_counter+=1
             trace_chunk = open('./' + str(chunk_counter) + '_u1.csv', 'w') 
             old_size_module = size_module
