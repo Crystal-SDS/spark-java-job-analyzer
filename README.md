@@ -1,6 +1,6 @@
 ### Code Analyzer for Spark Jobs (Java)
 
-This project is an example of the type of code analyzers that can be integrated in [Crystal](https://github.com/Crystal-SDS) for optimizing analytics data access to object storage via software-defined storage mechanisms. In particular, the objective of this project is to analyze the code of an input Spark job (Java) and to identify those operations performed on RDDs (and many of its subclasses) that can be delegated for execution to the storage side (thanks to a new [Storlet](https://github.com/Crystal-SDS/filter-samples/tree/master/Storlet_lambda_pushdown)). That is, operations like filter(), map() or reduce() are migrated and executed at the storage side for obtaining a faster application execution time.
+This project is an example of the type of code analyzers that can be integrated in [Crystal](https://github.com/Crystal-SDS) for optimizing analytics data access to object storage via software-defined storage mechanisms. In particular, the objective of this project is to analyze the code of an input Spark job (Java) and to identify those operations performed on RDDs (and many of its subclasses) that can be delegated for execution to the storage side (thanks to a new [Storlet](https://github.com/Crystal-SDS/filter-samples/tree/master/Storlet_lambda_pushdown)). That is, operations like filter(), map() or reduce() are migrated and executed at the storage side for reducing the amount of data transferred among clusters and even obtaining faster application execution times.
 
 ### Lifecycle
 
@@ -85,6 +85,10 @@ The last step is to do the actual execution. To this end, there is a python scri
 python SparkJavaJobAnalyzerExecutor.py /home/user/Desktop/SparkJavaJobAnalyzer.jar /home/user/Desktop/SparkJavaWordCount.java
 ```
 The python script i) gets as input a Spark job, ii) executes the code analyzer JAR that you created, iii) sets the output lambdas to the Lambda Pushdown Storlet, iv) compiles/packages the Spark job, and v) submits the job to Spark. To enable the Python script to work properly, please set the constants of the beggining of the script code (it is already configured to work with the Crystal VM, but things like IPs and the location of Spark depend on your environment).   
+
+### Practical Considerations and Limitations
+
+As a prototype, this code is able to handle a certain spectrum of cases/code embedded within Spark jobs, but it is not a complete analyzer that copes with all possible cases. There are important limitations that a developer must be aware of: i) We only tested cases in which the lambdas contain all the logic for execution (i.e., we have not worked on handling references from lambdas to external code/functions), ii) The "types" of data that can be managed at the storage side are standard ones (String, Integer, Long, Lists, SimpleEntry,..) but not custom ones created at the Spark application (this would require the storage side not to only compile functions, but also types as well).  
 
 ### Conclusion
 
