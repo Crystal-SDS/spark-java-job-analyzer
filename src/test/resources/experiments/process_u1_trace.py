@@ -44,8 +44,9 @@ with gzip.open(DATASET_PATH, 'rt') as f:
         if size_module>0 and size_module%CHUNK_SIZE_IN_MB==0 and size_module>old_size_module:
             gc.collect() 
             trace_chunk.close()
-            if DATASET_SIZE_IN_MB <= (chunk_counter*CHUNK_SIZE_IN_MB):
-                return
+            if DATASET_SIZE_IN_MB < (chunk_counter*CHUNK_SIZE_IN_MB):
+                break            
+            
             chunk_counter+=1
             trace_chunk = open('./' + str(chunk_counter) + '_u1.csv', 'w') 
             old_size_module = size_module
