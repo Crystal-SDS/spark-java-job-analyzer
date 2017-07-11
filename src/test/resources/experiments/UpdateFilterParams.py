@@ -72,7 +72,7 @@ def update_filter_params(lambdasToMigrate):
     headers["X-Auth-Token"] = str(token)
     headers['Content-Type'] = "application/json"
     
-    lambdas_as_string = ''
+    lambdas_as_string = 'sequential=true,'
     index = 0
     for x in lambdasToMigrate:
         lambdas_as_string+= str(index) + "-lambda=" + str(x) + ","
@@ -115,12 +115,32 @@ def main(argv=None):
     
     'Pushdown for Q1'
     toMigrate = ["java.util.function.Function<java.lang.String' java.util.List<java.lang.String>>|"
-                + "map(s -> { java.util.List<String> l $ new java.util.ArrayList<String>(); String[] a $ s.split(\"'\"); "
-                + "l.add(a[0]); l.add(a[1]); l.add(a[5]); l.add(a[7]);",
+                + "map(s -> { java.util.List<String> list $ new java.util.ArrayList<String>(); String[] a $ s.split(\"'\"); "
+                + "list.add(a[0]); list.add(a[1]); list.add(\"\"); list.add(\"\"); list.add(\"\");"
+                + "list.add(a[5]); list.add(\"\"); list.add(a[7]); list.add(\"\"); list.add(\"\"); list.add(\"\"); return list;})",
                 "java.util.function.Predicate<java.util.List<java.lang.String>>|" 
-                + "filter(s -> (s.get(0).startsWith(\"2015-01\") && s.get(3).equals(\"Paris\")) || s.get(0).startsWith(\"date\"))",
+                + "filter(s -> (s.get(0).startsWith(\"2015-01\") && s.get(7).equals(\"Paris\")) || s.get(0).startsWith(\"date\"))",
                 "java.util.function.Function<java.util.List<java.lang.String>' java.lang.String>|"
-                    + "map(l -> l.toString().replace(\"[\", \"\").replace(\"]\", \"\"))"]
+                + "map(l -> l.toString().replace(\"[\"' \"\").replace(\"]\"' \"\").replace(\" \"' \"\"))"]
+    
+    'Pushdown for Q2'
+    '''toMigrate = ["java.util.function.Function<java.lang.String' java.util.List<java.lang.String>>|"
+                + "map(s -> { java.util.List<String> list $ new java.util.ArrayList<String>(); String[] a $ s.split(\"'\"); "
+                + "list.add(a[0]); list.add(\"\"); list.add(a[2]); list.add(a[3]); list.add(a[4]); list.add(a[5]); " 
+                + "list.add(\"\"); list.add(\"\"); list.add(\"\"); list.add(\"\"); list.add(\"\"); return list;})",
+                "java.util.function.Function<java.util.List<java.lang.String>' java.lang.String>|"
+                + "map(l -> l.toString().replace(\"[\"' \"\").replace(\"]\"' \"\").replace(\" \"' \"\"))"]
+    '''
+    'Pushdown for Q3'
+    '''toMigrate = ["java.util.function.Function<java.lang.String' java.util.List<java.lang.String>>|"
+                + "map(s -> { java.util.List<String> list $ new java.util.ArrayList<String>(); String[] a $ s.split(\"'\"); "
+                + "list.add(a[0]); list.add(a[1]); list.add(\"\"); list.add(\"\"); list.add(\"\"); list.add(a[5]); "
+                + "list.add(\"\"); list.add(a[7]); list.add(\"\"); list.add(\"\"); list.add(\"\"); list.add(\"\"); return list;})",
+                "java.util.function.Predicate<java.util.List<java.lang.String>>|" 
+                + "filter(s -> s.get(0).startsWith(\"2014\") || s.get(0).startsWith(\"2015\") || s.get(0).startsWith(\"2016\") || s.get(0).startsWith(\"date\"))",
+                "java.util.function.Function<java.util.List<java.lang.String>' java.lang.String>|"
+                + "map(l -> l.toString().replace(\"[\"' \"\").replace(\"]\"' \"\").replace(\" \"' \"\"))"]
+    '''
     str(update_filter_params(toMigrate))
     
     
