@@ -7,16 +7,11 @@ import org.apache.spark.api.java.JavaSparkContext;
 
 import scala.Tuple2;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 
 public class SparkJavaWordCount {
 	
 	public static void main(String[] args) {
-		
-		long timeInMillis = System.currentTimeMillis();
 		
 		SparkConf conf = new SparkConf().setAppName("SparkJavaWordCount");
 		JavaSparkContext sc = new JavaSparkContext(conf);
