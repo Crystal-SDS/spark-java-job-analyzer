@@ -9,9 +9,13 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.nio.charset.Charset;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +36,7 @@ import com.ibm.storlet.common.StorletObjectOutputStream;
 import com.ibm.storlet.common.StorletOutputStream;
 
 import pl.joegreen.lambdaFromString.LambdaFactory;
+import pl.joegreen.lambdaFromString.LambdaFactoryConfiguration;
 import pl.joegreen.lambdaFromString.TypeReference;
 
 
@@ -66,7 +71,9 @@ public class LambdaPushdownStorlet implements IStorlet {
 	
 	protected Map<String, String> parameters = null;
 	
-	protected LambdaFactory lambdaFactory = LambdaFactory.get();
+	//Classes that can be used within lambdas for compilation
+	protected LambdaFactory lambdaFactory = LambdaFactory.get(LambdaFactoryConfiguration.get()
+			.withImports(BigDecimal.class, Arrays.class, Set.class, Map.class, SimpleEntry.class, Date.class));
 	
 	//This map stores the signature of a lambda as a key and the lambda object as a value.
 	//It acts as a cache of repeated lambdas to avoid compilation overhead of already compiled lambdas.
