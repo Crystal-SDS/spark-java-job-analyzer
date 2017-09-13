@@ -83,7 +83,8 @@ public class LambdaPushdownStorlet implements IStorlet {
 	private static final String EQUAL_REPLACEMENT_IN_PARAMS = "$";
 	
 	public LambdaPushdownStorlet() {
-		new CollectorCompilationHelper().initializeCollectorCache(collectorCache);
+		new GetCollectorHelper().initializeCollectorCache(collectorCache);
+		GetTypeReferenceHelper.initializeTypeReferenceCache();
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -331,7 +332,7 @@ public class LambdaPushdownStorlet implements IStorlet {
 	private Collector getCollectorObject(String lambdaSignature, String lambdaType) {
 		Collector function = null;
 		try {
-			return CollectorCompilationHelper.getCollectorObject(getLambdaBody(lambdaSignature), lambdaType);
+			return GetCollectorHelper.getCollectorObject(getLambdaBody(lambdaSignature), lambdaType);
 		} catch (SecurityException | IllegalArgumentException e) {
 			e.printStackTrace();
 		}		
@@ -350,8 +351,8 @@ public class LambdaPushdownStorlet implements IStorlet {
 		String supportedTypesMethod = "get" + methodName.substring(0,1).toUpperCase() + 
 				methodName.substring(1) + "Type";
 		try {
-			Method theMethod = SupportedLambdaTypes.class.getMethod(supportedTypesMethod, String.class);
-			return (TypeReference) theMethod.invoke(SupportedLambdaTypes.class, lambdaType);
+			Method theMethod = GetTypeReferenceHelper.class.getMethod(supportedTypesMethod, String.class);
+			return (TypeReference) theMethod.invoke(GetTypeReferenceHelper.class, lambdaType);
 		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | 
 				IllegalArgumentException | InvocationTargetException e) {
 			e.printStackTrace();

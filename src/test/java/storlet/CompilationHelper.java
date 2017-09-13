@@ -1,26 +1,13 @@
-package main.java.compiler;
+package test.java.storlet;
 
 import net.openhft.compiler.CachedCompiler;
 import net.openhft.compiler.CompilerUtils;
 
-/**
- * Class that provides a simple compilation services for java classes
- * in String objects.
- * 
- * @author Raul Gracia
- *
- */
-public class JobCompiler {
-	
-	private static final String COMPILED_JOB_PATH = "test.resources.test_jobs";
-	
+public class CompilationHelper {
+
 	private static CachedCompiler compiler = CompilerUtils.CACHED_COMPILER;
 	
-	public Object compileFromString(String className, String javaCode) {
-		return compileFromString(COMPILED_JOB_PATH, className, javaCode);
-	 }
-	
-	public Object compileFromString(String classPath, String className, String javaCode) {
+	public static Object compileFromString(String classPath, String className, String javaCode) {
 		try {
 			javaCode = javaCode.replace(className, className+"_");
 			Class aClass = compiler.loadFromJava(classPath+"."+className+"_", javaCode);
@@ -31,5 +18,6 @@ public class JobCompiler {
 		}
 		return null;
 	 }
+	
 	
 }

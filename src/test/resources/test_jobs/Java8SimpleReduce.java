@@ -14,10 +14,13 @@ public class Java8SimpleReduce implements TestTask{
 		try{
 			Stream<String> myStream = Files.lines(Paths.get(inputFile));
 			//FIXME: Now we only support reduce->optional version
-			int countLines = myStream.filter(s -> s.contains("Hamlet"))
+			System.out.println(myStream.filter(s -> s.contains("Hamlet"))
 								 .map(l -> l.length())
-								 .reduce((a, b) -> a + b).get();
-			builder.append(countLines);
+								 .reduce((a, b) -> {
+									 if (Integer.valueOf(a) > Integer.valueOf(b)) return a;
+									 else return b;}));
+								 
+			//builder.append(countLines);
 			myStream.close();
 		} catch (IOException e) {
 			e.printStackTrace();
