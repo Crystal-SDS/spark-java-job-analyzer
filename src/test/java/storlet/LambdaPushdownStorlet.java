@@ -11,6 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
+import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,7 +74,8 @@ public class LambdaPushdownStorlet implements IStorlet {
 	
 	//Classes that can be used within lambdas for compilation
 	protected LambdaFactory lambdaFactory = LambdaFactory.get(LambdaFactoryConfiguration.get()
-			.withImports(BigDecimal.class, Arrays.class, Set.class, Map.class, SimpleEntry.class, Date.class));
+			.withImports(BigDecimal.class, Arrays.class, Set.class, Map.class, SimpleEntry.class, 
+					Date.class, Instant.class));
 	
 	//This map stores the signature of a lambda as a key and the lambda object as a value.
 	//It acts as a cache of repeated lambdas to avoid compilation overhead of already compiled lambdas.

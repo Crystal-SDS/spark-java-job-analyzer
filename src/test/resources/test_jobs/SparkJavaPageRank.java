@@ -47,7 +47,7 @@ public final class SparkJavaPageRank {
 		// URL neighbor URL
 		// ...
 
-		JavaRDD<String> lines = spark.read().textFile(args[0]).javaRDD();
+		JavaRDD<String> lines = spark.read().textFile("swift2d://social_data.lvm/*").javaRDD();
 
 		// Loads all URLs from input file and initialize their neighbors.
 		JavaPairRDD<String, Iterable<String>> links = lines.mapToPair(s -> {

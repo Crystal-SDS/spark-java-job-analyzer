@@ -14,6 +14,7 @@ public class FlowControlGraph implements Iterable<GraphNode>{
 	private String rdd = "";
 	private String type = "";
 	
+	private String oiriginContainer;
 	private String oiriginRDD;
 	private boolean linked;
 	
@@ -115,6 +116,15 @@ public class FlowControlGraph implements Iterable<GraphNode>{
 	public void setType(String type) {
 		this.type = type;
 	}
+
+	public String getOriginContainer() {
+		return oiriginContainer;
+	}
+
+	public void setOriginContainer(String oiriginContainer) {
+		this.oiriginContainer = oiriginContainer;
+	}
+	
 }
 
 class FlowControlGraphIterator implements Iterator<GraphNode>{

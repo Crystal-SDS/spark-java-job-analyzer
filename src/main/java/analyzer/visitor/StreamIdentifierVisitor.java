@@ -22,6 +22,8 @@ public class StreamIdentifierVisitor extends ModifierVisitor<Void> {
 	
 	public Pattern datasetsPattern;
 	public Pattern datasetsParameterizedPattern;
+	//With this, we identify the data container related to a particular RDD
+	public Pattern containerPattern = Pattern.compile("(swift2d|swift)\\:\\/\\/\\w*\\.");
 	public Map<String, FlowControlGraph> identifiedStreams;
 	
 	public StreamIdentifierVisitor(String targetedDatasets, Map<String, FlowControlGraph> identifiedStreams) {
@@ -44,13 +46,21 @@ public class StreamIdentifierVisitor extends ModifierVisitor<Void> {
      		graph.setType(declarator.getType().toString());
      		identifiedStreams.put(streamName, graph);
      		String streamAssignment = declarator.getChildNodes().get(2).toString().trim();
+     		
      		//Maybe there is an even simpler way of doing this
      		Optional<String> referencedRDD = Arrays.stream(streamAssignment.split("\\."))
-     											.filter(s -> identifiedStreams.containsKey(s))
+     											.filter(s ->  identifiedStreams.containsKey(s))
      											.findFirst();
+     		
+     		Matcher containerMatcher = containerPattern.matcher(streamAssignment);
+     		
      		//Here we note that this RDD comes from another one
      		if (referencedRDD.isPresent())
      			graph.setOiriginRDD(referencedRDD.get());
+     		else if (containerMatcher.find()){
+     			String theMatch = streamAssignment.substring(containerMatcher.start(), containerMatcher.end());
+     			graph.setOriginContainer(theMatch.substring(theMatch.indexOf("://")+3, theMatch.indexOf(".")));
+     		}
      	}	 
 		return declarator;
 	 }
