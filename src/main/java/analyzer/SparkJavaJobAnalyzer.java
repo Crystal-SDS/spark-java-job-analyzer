@@ -158,6 +158,6 @@ public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
         }
         //The control plane is in Python, so the caller script will need to handle this result
         //and distinguish between the lambdas to pushdown and the code of the job to submit
-        return Utils.encodeResponse(originalJobCode, modifiedJobCode, lambdasToMigrate);
+        return Utils.encodeResponse(originalJobCode, modifiedJobCode, perContainerLambdasToMigrate);
 	}
 }

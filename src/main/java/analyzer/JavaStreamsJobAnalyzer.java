@@ -122,12 +122,14 @@ public class JavaStreamsJobAnalyzer {
         	lambdasToMigrate.put(streamName, new ArrayList<>());
         	for (GraphNode node: identifiedStreams.get(streamName)){
         		if (node.getToPushdown()!=null)
-        			lambdasToMigrate.get(streamName).add(new SimpleEntry<String, String>(node.getToPushdown(), 
+        			lambdasToMigrate.get(streamName)
+        							.add(new SimpleEntry<String, String>(node.getToPushdown(), 
         								node.getFunctionType()));
         		//Modify the original's job code according to modification rules
         		String toReplace = "";
-        		if (node.getCodeReplacement()!="") toReplace =  "."+node.getCodeReplacement();
-        			modifiedJobCode = modifiedJobCode.replace("."+node.getLambdaSignature(), toReplace);
+        		if (node.getCodeReplacement()!="")
+        			toReplace =  "."+node.getCodeReplacement();
+        		modifiedJobCode = modifiedJobCode.replace("."+node.getLambdaSignature(), toReplace);
         	}
         }  
         if (DEBUG) System.out.println(modifiedJobCode);
