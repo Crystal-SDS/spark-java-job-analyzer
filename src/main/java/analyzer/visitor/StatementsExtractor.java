@@ -64,10 +64,8 @@ public class StatementsExtractor extends VoidVisitorAdapter<Object> {
 		//If the current RDD comes from another one, link it to the graph of the original
 		//This is necessary to compute afterwards what computations to migrate without impacting the results
 		FlowControlGraph flowGraph = identifiedStreams.get(streamKeyString);
-		if (flowGraph!=null && flowGraph.getOiriginRDD()!=null && !flowGraph.isLinked()){
-			identifiedStreams.get(flowGraph.getOiriginRDD()).getLastNode().getAssignedRDDs().add(flowGraph);
-			flowGraph.setLinked(true);
-		}
+		if (flowGraph.isDerivedRDD())
+			identifiedStreams.get(flowGraph.getOriginRDD().getRdd()).getLastNode().getAssignedRDDs().add(flowGraph);
 		
 		//Leave only the expression that is interesting to us, on the stream variable. We need this
 		//as the expression can be within a System.out.print() method, for example

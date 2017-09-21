@@ -29,7 +29,7 @@ public class SafeLambdaMigrationFinder {
 		for (String key: identifiedStreams.keySet()){
 			FlowControlGraph graph = identifiedStreams.get(key);
 			//RDDs that are derived are not necessary to iterate, we will do when we process the root ones
-			if (graph.isLinked()) continue;
+			if (graph.isDerivedRDD()) continue;
 			Iterator<GraphNode> nodeIterator = graph.iterator();
 			GraphNode lastSecureNode = null;
 			while (nodeIterator.hasNext()){

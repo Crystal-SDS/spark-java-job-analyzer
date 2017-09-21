@@ -112,6 +112,7 @@ public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
         for (String rddName: identifiedStreams.keySet()){        	
 	        for (GraphNode node: identifiedStreams.get(rddName)){  
 	        	String functionName = node.getFunctionName();
+	        	if (!lambdasToMigrate.containsKey(rddName)) continue;
 	        	for (SimpleEntry<String, String> theLambda: lambdasToMigrate.get(rddName)){
 	        		if (node.getCodeReplacement().equals(theLambda.getKey())){
 	        			try {
@@ -151,10 +152,9 @@ public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
         	if (containerName!=null && !perContainerLambdasToMigrate.containsKey(containerName))
         		perContainerLambdasToMigrate.put(containerName, new ArrayList<>());
         	//If this is a derived RDD, look for the container that it points to
-        	else containerName = identifiedStreams.get(
-        			identifiedStreams.get(rddName).getOiriginRDD()).getOriginContainer();
         	//Add all the lambdas for this container comming from one or many RDDs
-        	perContainerLambdasToMigrate.get(containerName).addAll(lambdasToMigrate.get(rddName));
+        	if (lambdasToMigrate.containsKey(rddName))
+        		perContainerLambdasToMigrate.get(containerName).addAll(lambdasToMigrate.get(rddName));
         }
         //The control plane is in Python, so the caller script will need to handle this result
         //and distinguish between the lambdas to pushdown and the code of the job to submit

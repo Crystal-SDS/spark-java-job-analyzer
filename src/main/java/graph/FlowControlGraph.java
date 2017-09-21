@@ -14,9 +14,10 @@ public class FlowControlGraph implements Iterable<GraphNode>{
 	private String rdd = "";
 	private String type = "";
 	
-	private String oiriginContainer;
-	private String oiriginRDD;
-	private boolean linked;
+	/*Actual data source for this RDD (e.g., Swift data container)*/
+	private String originContainer;
+	/*If an RDD comes from a transformation from another one, point to it*/
+	private FlowControlGraph originRDD;
 	
 	private GraphNode root;
 	
@@ -85,20 +86,16 @@ public class FlowControlGraph implements Iterable<GraphNode>{
 		this.root = root;
 	}
 
-	public String getOiriginRDD() {
-		return oiriginRDD;
+	public FlowControlGraph getOriginRDD() {
+		return originRDD;
 	}
 
-	public void setOiriginRDD(String oiriginRDD) {
-		this.oiriginRDD = oiriginRDD;
+	public void setOriginRDD(FlowControlGraph originRDD) {
+		this.originRDD = originRDD;
 	}
 
-	public boolean isLinked() {
-		return linked;
-	}
-
-	public void setLinked(boolean linked) {
-		this.linked = linked;
+	public boolean isDerivedRDD() {
+		return originRDD!=null;
 	}
 	
 	public GraphNode getLastNode() {
@@ -118,11 +115,11 @@ public class FlowControlGraph implements Iterable<GraphNode>{
 	}
 
 	public String getOriginContainer() {
-		return oiriginContainer;
+		return (originContainer!=null)? originContainer : originRDD.getOriginContainer();
 	}
 
 	public void setOriginContainer(String oiriginContainer) {
-		this.oiriginContainer = oiriginContainer;
+		this.originContainer = oiriginContainer;
 	}
 	
 }

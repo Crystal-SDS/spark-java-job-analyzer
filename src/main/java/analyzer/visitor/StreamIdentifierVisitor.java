@@ -55,8 +55,8 @@ public class StreamIdentifierVisitor extends ModifierVisitor<Void> {
      		Matcher containerMatcher = containerPattern.matcher(streamAssignment);
      		
      		//Here we note that this RDD comes from another one
-     		if (referencedRDD.isPresent())
-     			graph.setOiriginRDD(referencedRDD.get());
+     		if (referencedRDD.isPresent())  
+     			graph.setOriginRDD(identifiedStreams.get(referencedRDD.get()));
      		else if (containerMatcher.find()){
      			String theMatch = streamAssignment.substring(containerMatcher.start(), containerMatcher.end());
      			graph.setOriginContainer(theMatch.substring(theMatch.indexOf("://")+3, theMatch.indexOf(".")));

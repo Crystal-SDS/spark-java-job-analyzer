@@ -89,13 +89,16 @@ public abstract class AbstractAnalyzerTest extends TestCase{
 		JSONObject jsonObj = null;
 		try {
 			jsonObj = (JSONObject) parser.parse(jobAnalyzerOutput);
-			@SuppressWarnings("unchecked")
-			Iterator<JSONObject> lambdas =  ((JSONArray) jsonObj.get("lambdas")).iterator();
-			int index = 0;
-			while (lambdas.hasNext()){
-				JSONObject jlambda = lambdas.next();
-				lambdaMap.put(index+"-lambda", (String)jlambda.get("lambda-type-and-body"));
-				index++;
+			JSONObject jsonLambdaMap = ((JSONObject) jsonObj.get("lambdas"));
+			Iterator<JSONObject> lambdas;
+			for (Object streamName: jsonLambdaMap.keySet()) {
+				lambdas = ((JSONArray) jsonLambdaMap.get((String) streamName)).iterator();
+				int index = 0;
+				while (lambdas.hasNext()){
+					JSONObject jlambda = lambdas.next();
+					lambdaMap.put(index+"-lambda", (String)jlambda.get("lambda-type-and-body"));
+					index++;
+				}
 			}
 			modifiedJobCode = (String) jsonObj.get("pushdown-job-code");
 		} catch (ParseException e) {
