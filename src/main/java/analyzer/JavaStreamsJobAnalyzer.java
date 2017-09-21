@@ -6,7 +6,9 @@ import java.io.FileNotFoundException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.simple.JSONObject;
 
@@ -46,7 +48,7 @@ public class JavaStreamsJobAnalyzer {
 	
 	protected final String jobType = "javastreams";
 	
-	protected HashMap<String, FlowControlGraph> identifiedStreams = new HashMap<String, FlowControlGraph>();
+	protected HashMap<String, FlowControlGraph> identifiedStreams = new LinkedHashMap<String, FlowControlGraph>();
 	
 	protected static String targetedDatasets = "(Stream)\\s*";
 			//+ "(\\s*?(<\\s*?\\w*\\s*?(,\\s*?\\w*\\s*?)?\\s*?>))?"; //\\s*?\\w*\\s*?=";
@@ -115,11 +117,12 @@ public class JavaStreamsJobAnalyzer {
         } 
 
         //Get all the lambdas from the graph that have been selected for pushdown
-        List<SimpleEntry<String, String>> lambdasToMigrate = new ArrayList<>();
-        for (String key: identifiedStreams.keySet()){
-        	for (GraphNode node: identifiedStreams.get(key)){
+        Map<String, List<SimpleEntry<String, String>>> lambdasToMigrate = new HashMap<>();
+        for (String streamName: identifiedStreams.keySet()){        	
+        	lambdasToMigrate.put(streamName, new ArrayList<>());
+        	for (GraphNode node: identifiedStreams.get(streamName)){
         		if (node.getToPushdown()!=null)
-        			lambdasToMigrate.add(new SimpleEntry<String, String>(node.getToPushdown(), 
+        			lambdasToMigrate.get(streamName).add(new SimpleEntry<String, String>(node.getToPushdown(), 
         								node.getFunctionType()));
         		//Modify the original's job code according to modification rules
         		String toReplace = "";

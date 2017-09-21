@@ -2,7 +2,9 @@ package main.java.utils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.AbstractMap.SimpleEntry;
 
 import org.json.simple.JSONArray;
@@ -49,41 +51,49 @@ public class Utils {
 	 */
 	@SuppressWarnings("unchecked")
 	public static JSONObject encodeResponse(String originalJob, String modifiedJob, 
-									List<SimpleEntry<String, String>> lambdasToMigrate) {
+									Map<String, List<SimpleEntry<String, String>>> lambdasToMigrate) {
 		JSONObject obj = new JSONObject();
-		JSONArray jsonArray = new JSONArray();
+		JSONObject perDataSourceLambdas = new JSONObject();
 		
-		for (SimpleEntry<String, String> lambda: lambdasToMigrate){
-			System.out.println(lambda);
-			JSONObject lambdaObj = new JSONObject();
-			//TODO: The comma replacement is needed as the "," character is reserved in the
-			//Storlet middleware to separate key/value pairs
-			String lambdaSignature = (lambda.getValue() + LAMBDA_TYPE_AND_BODY_SEPARATOR 
-					+ lambda.getKey()).replace(",", COMMA_REPLACEMENT_IN_PARAMS)
-									  .replace("=", EQUAL_REPLACEMENT_IN_PARAMS);
-			System.err.println(lambdaSignature);
-			lambdaObj.put("lambda-type-and-body", lambdaSignature);
-			jsonArray.add(lambdaObj); 
+		for (String dataSource: lambdasToMigrate.keySet()){
+			JSONArray jsonArray = new JSONArray();
+			for (SimpleEntry<String, String> lambda: lambdasToMigrate.get(dataSource)){
+				System.out.println(lambda);
+				JSONObject lambdaObj = new JSONObject();
+				//TODO: The comma replacement is needed as the "," character is reserved in the
+				//Storlet middleware to separate key/value pairs
+				String lambdaSignature = (lambda.getValue() + LAMBDA_TYPE_AND_BODY_SEPARATOR 
+						+ lambda.getKey()).replace(",", COMMA_REPLACEMENT_IN_PARAMS)
+										  .replace("=", EQUAL_REPLACEMENT_IN_PARAMS);
+				System.err.println(lambdaSignature);
+				lambdaObj.put("lambda-type-and-body", lambdaSignature);
+				jsonArray.add(lambdaObj); 
+			}
+			perDataSourceLambdas.put(dataSource, jsonArray);
 		}
 		//Separator between lambdas and the job source code
 		obj.put("original-job-code", originalJob);	
 		obj.put("pushdown-job-code", modifiedJob);	
-		obj.put("lambdas", jsonArray);
+		obj.put("lambdas", perDataSourceLambdas);
 		return obj;
 	}
 	
-	public static List<SimpleEntry<String, String>> getLambdasToMigrate(JSONObject json){		
-		List<SimpleEntry<String, String>> lambdasToMigrate = new ArrayList<>();
-		JSONArray jsonArray = (JSONArray) json.get("lambdas");
-		Iterator<JSONObject> it = jsonArray.listIterator();
-		while (it.hasNext()){
-			String lambdaSignature = (String) it.next().get("lambda-type-and-body");
-			lambdaSignature = lambdaSignature.replace(COMMA_REPLACEMENT_IN_PARAMS, ",")
-											 .replace(EQUAL_REPLACEMENT_IN_PARAMS, "=");
-			lambdasToMigrate.add(new SimpleEntry<String, String>(
-					lambdaSignature.substring(lambdaSignature.indexOf(LAMBDA_TYPE_AND_BODY_SEPARATOR)+1),
-					lambdaSignature.substring(0, lambdaSignature.indexOf(LAMBDA_TYPE_AND_BODY_SEPARATOR))));
-		} 		
+	public static Map<String, List<SimpleEntry<String, String>>> getLambdasToMigrate(JSONObject json){		
+		Map<String, List<SimpleEntry<String, String>>> lambdasToMigrate = new LinkedHashMap<>();
+		JSONObject perDataSourceLambdas = (JSONObject) json.get("lambdas");
+		for (Object dataSource: perDataSourceLambdas.keySet()) {
+			lambdasToMigrate.put((String) dataSource, new ArrayList<>());
+			JSONArray jsonArray = (JSONArray) perDataSourceLambdas.get((String) dataSource);
+			Iterator<JSONObject> it = jsonArray.listIterator();
+			while (it.hasNext()){
+				String lambdaSignature = (String) it.next().get("lambda-type-and-body");
+				lambdaSignature = lambdaSignature.replace(COMMA_REPLACEMENT_IN_PARAMS, ",")
+												 .replace(EQUAL_REPLACEMENT_IN_PARAMS, "=");
+				lambdasToMigrate.get((String) dataSource).add(new SimpleEntry<String, String>(
+						lambdaSignature.substring(lambdaSignature.indexOf(LAMBDA_TYPE_AND_BODY_SEPARATOR)+1),
+						lambdaSignature.substring(0, lambdaSignature.indexOf(LAMBDA_TYPE_AND_BODY_SEPARATOR))));
+			} 		
+		}
 		return lambdasToMigrate;
 	}
 	

@@ -5,7 +5,10 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.simple.JSONObject;
 
@@ -26,11 +29,12 @@ public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
 
 	protected final String jobType = "sparkjava";
 
-	protected static String targetedDatasets = "(RDD|JavaRDD|JavaPairRDD|DStream|JavaDStream|JavaPairDStream)\\s*";
-			//+ "(\\s*?(<\\s*?\\w*\\s*?(,\\s*?\\w*\\s*?)?\\s*?>))?"; //\\s*?\\w*\\s*?=";
+	protected static String targetedDatasets = "(RDD|JavaRDD|JavaPairRDD|DStream|"
+			+ "JavaDStream|JavaPairDStream)\\s*";
 	
-	protected final String pushableTransformations = "(map|filter|flatMap|mapToPair|reduceByKey|reduce|distinct|groupByKey)";
-	protected final String pushableActions = "(collect|count|foreach|cache)";
+	protected final String pushableTransformations = "(map|filter|flatMap|mapToPair|"
+			+ "reduceByKey|reduce|distinct|groupByKey)";
+	protected final String pushableActions = "(collect|count|foreach)";
 	
 	protected final String translationRulesPackage = "main.java.rules.translation." + jobType  + ".";
 	protected final String reverseRulesPackage = "main.java.rules.reverse." + jobType  + ".";
@@ -100,14 +104,15 @@ public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
         JavaStreamsJobAnalyzer javaStreamsAnalyzer = new JavaStreamsJobAnalyzer();
         JSONObject result = javaStreamsAnalyzer.analyze(translatedJobPath);
         //The lambdas to migrate should be Java8 Stream lambdas, as they will be executed by the Storlet
-        List<SimpleEntry<String, String>> lambdasToMigrate = Utils.getLambdasToMigrate(result);
+        Map<String, List<SimpleEntry<String, String>>> lambdasToMigrate = Utils.getLambdasToMigrate(result);
         String modifiedJobCode =  originalJobCode;
         
+        //Modify the original job by deleting all the functions that have been moved to the storage
         LambdaRule pushdownLambdaRule = null;
-        for (String rddName: identifiedStreams.keySet()){
+        for (String rddName: identifiedStreams.keySet()){        	
 	        for (GraphNode node: identifiedStreams.get(rddName)){  
 	        	String functionName = node.getFunctionName();
-	        	for (SimpleEntry<String, String> theLambda: lambdasToMigrate){
+	        	for (SimpleEntry<String, String> theLambda: lambdasToMigrate.get(rddName)){
 	        		if (node.getCodeReplacement().equals(theLambda.getKey())){
 	        			try {
 							//Instantiate the class that contains the rules to pushdown a given lambda
@@ -129,7 +134,28 @@ public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
 	        	}				
 	        }		
 		}	        
-
+        
+        //Finally, we want to pipeline all the lambdas related to a data container, not to a RDD
+        //RDD a = "container"
+        //a.map()
+        //RDD b = a
+        //b.filter()
+        //
+        //Expected result in perContainerLambdasToMigrate: {"container": [a, b]}
+        Map<String, List<SimpleEntry<String, String>>> perContainerLambdasToMigrate = new HashMap<>();
+        //Note that we iterated a map that keeps the insertion order, which means the order of lambdas
+        for (String rddName: identifiedStreams.keySet()) {
+        	FlowControlGraph graph = identifiedStreams.get(rddName);
+        	String containerName = graph.getOriginContainer();
+        	//First entry for a container, instantiate the list of lambdas for it
+        	if (containerName!=null && !perContainerLambdasToMigrate.containsKey(containerName))
+        		perContainerLambdasToMigrate.put(containerName, new ArrayList<>());
+        	//If this is a derived RDD, look for the container that it points to
+        	else containerName = identifiedStreams.get(
+        			identifiedStreams.get(rddName).getOiriginRDD()).getOriginContainer();
+        	//Add all the lambdas for this container comming from one or many RDDs
+        	perContainerLambdasToMigrate.get(containerName).addAll(lambdasToMigrate.get(rddName));
+        }
         //The control plane is in Python, so the caller script will need to handle this result
         //and distinguish between the lambdas to pushdown and the code of the job to submit
         return Utils.encodeResponse(originalJobCode, modifiedJobCode, lambdasToMigrate);

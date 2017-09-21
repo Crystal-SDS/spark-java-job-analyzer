@@ -1,7 +1,6 @@
 package test.resources.test_jobs;
 
 import java.time.Instant;
-import java.util.Arrays;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
@@ -26,7 +25,8 @@ public class SparkJavaJoinLogErrorCorrelation {
 						})
 					 .filter(split -> (split.size()==10 && (split.get(8).startsWith("40") || split.get(8).startsWith("50"))))
 					 .map(split -> split.get(3))
-					 .map(s -> new Double(Instant.parse(s).toEpochMilli()));
+					 .map(s -> new Double(Instant.parse(s).toEpochMilli()))
+					 .cache();
 		
 		JavaRDD<String> logContainer2 = sc.textFile("swift2d://apache_logs2.lvm/*");
 		JavaRDD<Double> vectorContainer2 = logContainer2
@@ -38,7 +38,8 @@ public class SparkJavaJoinLogErrorCorrelation {
 				})
 				.filter(split -> (split.size()==10 && (split.get(8).startsWith("40") || split.get(8).startsWith("50"))))
 				.map(split -> split.get(3))
-				.map(s -> new Double(Instant.parse(s).toEpochMilli()) - 604800000);
+				.map(s -> new Double(Instant.parse(s).toEpochMilli()) - 604800000)
+				.cache();
 		
 		Double correlation = Statistics.corr(vectorContainer1, vectorContainer2, "pearson");
 		System.out.println("Correlation is: " + correlation);
