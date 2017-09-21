@@ -170,7 +170,6 @@ def main(argv=None):
         with open(spark_job_path, 'r') as myfile:
             jobToCompile=myfile.read().replace('\n', '')
      
-    return
     '''STEP 5: Compile pushdown/original job'''
     m = re.search('package\s*(\w\.?)*\s*;', jobToCompile)
     jobToCompile = jobToCompile.replace(m.group(0), 
