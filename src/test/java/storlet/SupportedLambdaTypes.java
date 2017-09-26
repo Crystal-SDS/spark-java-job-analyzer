@@ -5,23 +5,19 @@ import java.util.Map;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collector;
 import java.util.stream.Stream;
+import java.util.AbstractMap.*;
 
 import pl.joegreen.lambdaFromString.TypeReference;
 
-import java.util.AbstractMap.*;
-
-
-public class GetTypeReferenceHelper {
+public class SupportedLambdaTypes {
 	
 	private static Map<String, TypeReference> supportedMapTypes = new HashMap<>();
 	private static Map<String, TypeReference> supportedFilterTypes = new HashMap<>();
 	private static Map<String, TypeReference> supportedFlatMapTypes = new HashMap<>();
 	private static Map<String, TypeReference> supportedReduceTypes = new HashMap<>();
 	
-    public static void initializeTypeReferenceCache() {
-		
+	static {
 		supportedMapTypes.put("java.util.function.Function<java.lang.String, java.lang.String>", 
 				new TypeReference<Function<String, String>>(){});
 		supportedMapTypes.put("java.util.function.Function<java.lang.String, java.lang.Integer>", 
@@ -48,6 +44,8 @@ public class GetTypeReferenceHelper {
 				new TypeReference<Function<String, SimpleEntry<String, String>>>(){});
 		supportedMapTypes.put("java.util.function.Function<java.lang.String, java.util.List<java.lang.String>>", 		
 				new TypeReference<Function<String, java.util.List<java.lang.String>>>(){});
+		supportedMapTypes.put("java.util.function.Function<java.util.List<java.lang.String>, java.lang.String>", 		
+				new TypeReference<Function<java.util.List<java.lang.String>, String>>(){});
 		supportedMapTypes.put("java.util.function.Function<java.lang.String, java.util.List<java.lang.Integer>>", 		
 				new TypeReference<Function<String, java.util.List<java.lang.Integer>>>(){});
 		supportedMapTypes.put("java.util.function.Function<java.lang.String, java.util.List<java.lang.Long>>", 		
@@ -86,44 +84,15 @@ public class GetTypeReferenceHelper {
 				new TypeReference<BinaryOperator<Integer>>(){});
 		supportedReduceTypes.put("java.util.function.BinaryOperator<java.lang.Long>", 
 				new TypeReference<BinaryOperator<Long>>(){});
-    }
-	
-	@SuppressWarnings("rawtypes")
-	public static TypeReference getTypeReferenceObject(String functionSignature) {
-		
-		 String className = "TypeReference"+String.valueOf(Math.abs(functionSignature.hashCode()));
-		 String javaCode = "package " + "test.java.storlet" + ";\n" +
-				 			"import java.util.stream.Collectors; \n" +
-				 			"import java.util.stream.Collector; \n" +
-				 			"import java.util.AbstractMap.SimpleEntry; \n" +
-				 			"import java.util.Map; \n" +
-				 			"import test.java.storlet.IGetTypeReference; \n" +
-				 			"import pl.joegreen.lambdaFromString.TypeReference; \n " +
-				 			
-		                    "public class " + className + " implements IGetTypeReference {\n" +
-		                    "    public TypeReference getTypeReference() {\n" +
-		                    "        return new TypeReference<" + functionSignature +">() {};\n" +
-		                    "    }\n" +
-		                    "}\n";
-		 
-		long iniTime = System.currentTimeMillis();	
-		IGetTypeReference getTypeReference = (IGetTypeReference) 
-				CompilationHelper.compileFromString("test.java.storlet", className, javaCode);
-		System.out.println("Type reference compilation time (ms): " + (System.currentTimeMillis()-iniTime));
-		return getTypeReference.getTypeReference();
+		supportedReduceTypes.put("java.util.function.BinaryOperator<java.lang.String>", 
+				new TypeReference<BinaryOperator<String>>(){});
+		supportedReduceTypes.put("java.util.function.BinaryOperator<java.util.List<java.lang.String>>", 
+				new TypeReference<BinaryOperator<java.util.List<java.lang.String>>>(){});
 	}
 	
-	private static TypeReference getOrCompileTypeReference(Map<String, TypeReference> theMap, String theKey) {
-		TypeReference result = theMap.get(theKey);
-		if (result!=null) return result;
-		result = getTypeReferenceObject(theKey);
-		theMap.put(theKey, result);
-		return result;
-	}
-	
-	public static TypeReference getMapType(String mapType){return getOrCompileTypeReference(supportedMapTypes, mapType);}
-	public static TypeReference getFilterType(String filterType){return getOrCompileTypeReference(supportedFilterTypes, filterType);}
-	public static TypeReference getFlatMapType(String flatMapType){return getOrCompileTypeReference(supportedFlatMapTypes, flatMapType);}
-	public static TypeReference getReduceType(String reduceType){return getOrCompileTypeReference(supportedReduceTypes, reduceType);}
+	public static TypeReference getMapType(String mapType){return supportedMapTypes.get(mapType);}
+	public static TypeReference getFilterType(String filterType){return supportedFilterTypes.get(filterType);}
+	public static TypeReference getFlatMapType(String flatMapType){return supportedFlatMapTypes.get(flatMapType);}
+	public static TypeReference getReduceType(String reduceType){return supportedReduceTypes.get(reduceType);}
 
 }

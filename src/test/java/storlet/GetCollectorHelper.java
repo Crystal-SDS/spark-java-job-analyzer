@@ -1,5 +1,6 @@
 package test.java.storlet;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.stream.Collector;
@@ -8,9 +9,20 @@ import java.util.stream.Collectors;
 public class GetCollectorHelper {
 	
 	private static final String COMPILED_JOB_PATH = "test.java.storlet";
+
+	private static Map<String, Collector> collectorCache = new HashMap<>();
+	
+	@SuppressWarnings("unused")
+	public static Collector getCollectorObject(String collectorSignature, String collectorType) {
+		Collector result = collectorCache.get(collectorSignature);
+		if (result!=null) return result;
+		result = compileCollectorObject(collectorSignature, collectorType);
+		collectorCache.put(collectorSignature, result);
+		return result;
+	}
 	
 	@SuppressWarnings("rawtypes")
-	public static Collector getCollectorObject(String collectorSignature, String collectorType) {
+	public static Collector compileCollectorObject(String collectorSignature, String collectorType) {
 		
 		 String className = "Collector"+String.valueOf(Math.abs(collectorSignature.hashCode()));
 		 String javaCode = "package " + COMPILED_JOB_PATH + ";\n" +
@@ -18,7 +30,7 @@ public class GetCollectorHelper {
 				 			"import java.util.stream.Collector; \n" +
 				 			"import java.util.AbstractMap.SimpleEntry; \n" +
 				 			"import java.util.Map; \n" +
-				 			"import " + COMPILED_JOB_PATH + ".IGetCollector; \n" +
+				 			"import test.java.storlet.IGetCollector; \n" +
 				 			
 		                    "public class " + className + " implements IGetCollector {\n" +
 		                    "    public " + collectorType +" getCollector() {\n" +
@@ -26,10 +38,9 @@ public class GetCollectorHelper {
 		                    "    }\n" +
 		                    "}\n";
 		 
-		System.out.println(javaCode);
 		long iniTime = System.currentTimeMillis();	
 		IGetCollector getCollector = (IGetCollector) CompilationHelper.compileFromString(COMPILED_JOB_PATH, className, javaCode);
-		System.out.println("NANO TIME COMPILATION COLLECTOR: " + (System.currentTimeMillis()-iniTime));
+		System.out.println("Collector compilatoin time (ms): " + (System.currentTimeMillis()-iniTime));
 		return getCollector.getCollector();
 	}
 	
@@ -39,22 +50,22 @@ public class GetCollectorHelper {
 	 * 
 	 * @param collectorCacheBuilder
 	 */
-	public void initializeCollectorCache(Map<String, Collector> collectorCacheBuilder) {
-		collectorCacheBuilder.put("collect(java.util.stream.Collectors.toList())", Collectors.toList());
-		collectorCacheBuilder.put("collect(java.util.stream.Collectors.toSet())", Collectors.toSet());
-		collectorCacheBuilder.put("collect(java.util.stream.Collectors.maxBy(String::compareTo))", Collectors.maxBy(String::compareTo));
-		collectorCacheBuilder.put("collect(java.util.stream.Collectors.maxBy(Integer::compareTo))", Collectors.maxBy(Integer::compareTo));
-		collectorCacheBuilder.put("collect(java.util.stream.Collectors.maxBy(Long::compareTo))", Collectors.maxBy(Long::compareTo));
-		collectorCacheBuilder.put("collect(java.util.stream.Collectors.minBy(String::compareTo))", Collectors.minBy(String::compareTo));
-		collectorCacheBuilder.put("collect(java.util.stream.Collectors.minBy(Integer::compareTo))", Collectors.minBy(Integer::compareTo));
-		collectorCacheBuilder.put("collect(java.util.stream.Collectors.minBy(Long::compareTo))", Collectors.minBy(Long::compareTo));		
-		collectorCacheBuilder.put("collect(java.util.stream.Collectors.groupingBy(SimpleEntry<String, Long>::getKey, "
+	public static void initializeCollectorCache() {
+		collectorCache.put("collect(java.util.stream.Collectors.toList())", Collectors.toList());
+		collectorCache.put("collect(java.util.stream.Collectors.toSet())", Collectors.toSet());
+		collectorCache.put("collect(java.util.stream.Collectors.maxBy(String::compareTo))", Collectors.maxBy(String::compareTo));
+		collectorCache.put("collect(java.util.stream.Collectors.maxBy(Integer::compareTo))", Collectors.maxBy(Integer::compareTo));
+		collectorCache.put("collect(java.util.stream.Collectors.maxBy(Long::compareTo))", Collectors.maxBy(Long::compareTo));
+		collectorCache.put("collect(java.util.stream.Collectors.minBy(String::compareTo))", Collectors.minBy(String::compareTo));
+		collectorCache.put("collect(java.util.stream.Collectors.minBy(Integer::compareTo))", Collectors.minBy(Integer::compareTo));
+		collectorCache.put("collect(java.util.stream.Collectors.minBy(Long::compareTo))", Collectors.minBy(Long::compareTo));		
+		collectorCache.put("collect(java.util.stream.Collectors.groupingBy(SimpleEntry<String, Long>::getKey, "
 				+ "java.util.stream.Collectors.counting()))", 
 				Collectors.groupingBy(SimpleEntry<String, Long>::getKey, Collectors.counting()));
-		collectorCacheBuilder.put("collect(java.util.stream.Collectors.groupingBy(SimpleEntry<String, Integer>::getKey, "
+		collectorCache.put("collect(java.util.stream.Collectors.groupingBy(SimpleEntry<String, Integer>::getKey, "
 				+ "java.util.stream.Collectors.counting()))", 
 				Collectors.groupingBy(SimpleEntry<String, Integer>::getKey, Collectors.counting()));
-		collectorCacheBuilder.put("collect(java.util.stream.Collectors.counting())", Collectors.counting());
+		collectorCache.put("collect(java.util.stream.Collectors.counting())", Collectors.counting());
 	}
 
 }

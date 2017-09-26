@@ -9,15 +9,19 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -40,7 +44,6 @@ import pl.joegreen.lambdaFromString.LambdaFactory;
 import pl.joegreen.lambdaFromString.LambdaFactoryConfiguration;
 import pl.joegreen.lambdaFromString.TypeReference;
 
-
 /**
  * 
  * This Storlet is intended to dynamically execute code piggybacked into
@@ -58,8 +61,8 @@ import pl.joegreen.lambdaFromString.TypeReference;
  * 
  * Such functionality can enable frameworks like Spark to intelligently delegate
  * computations, such as data filtering and transformations, to the Swift cluster,
- * making the analytics jobs much faster. This storlet relies on the LambdaStreamsStorlet
- * to do the byte-level in/out streams conversion to Java 8 Streams.
+ * making the analytics jobs much faster. This storlet does the byte-level in/out 
+ * streams conversion into Java 8 Streams.
  * 
  * @author Raul Gracia
  *
@@ -68,19 +71,20 @@ import pl.joegreen.lambdaFromString.TypeReference;
 public class LambdaPushdownStorlet implements IStorlet {
 	
 	protected final Charset CHARSET = Charset.forName("UTF-8");
-	protected final int BUFFER_SIZE = 8*1024;
+	protected final int BUFFER_SIZE = 128*1024;
 	
 	protected Map<String, String> parameters = null;
+	private StorletLogger logger;
 	
 	//Classes that can be used within lambdas for compilation
 	protected LambdaFactory lambdaFactory = LambdaFactory.get(LambdaFactoryConfiguration.get()
 			.withImports(BigDecimal.class, Arrays.class, Set.class, Map.class, SimpleEntry.class, 
-					Date.class, Instant.class));
+					Date.class, Instant.class, SimpleDateFormat.class, DateTimeFormatter.class));		
 	
 	//This map stores the signature of a lambda as a key and the lambda object as a value.
 	//It acts as a cache of repeated lambdas to avoid compilation overhead of already compiled lambdas.
 	protected Map<String, Function> lambdaCache = new HashMap<>();
-	protected Map<String, Collector> collectorCache = new HashMap<>();
+	//protected Map<String, Collector> collectorCache = new HashMap<>();
 	protected Map<String, Function> reducerCache = new HashMap<>();
 	
 	private Pattern lambdaBodyExtraction = Pattern.compile("(map|filter|flatMap|collect|reduce)\\s*?\\(");
@@ -90,15 +94,18 @@ public class LambdaPushdownStorlet implements IStorlet {
 	//Storlet middleware treats every "," as a separation between key/value parameter pairs
 	private static final String COMMA_REPLACEMENT_IN_PARAMS = "'";
 	private static final String EQUAL_REPLACEMENT_IN_PARAMS = "$";
+	private static final String ADD_FILE_HEADER = "add_header";
+	private static final String SEQUENTIAL_STREAM = "sequential";
+	
+	private static final String noneType = "None<>";
 	
 	public LambdaPushdownStorlet() {
-		new GetCollectorHelper().initializeCollectorCache(collectorCache);
+		GetCollectorHelper.initializeCollectorCache();
 		GetTypeReferenceHelper.initializeTypeReferenceCache();
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected Stream writeYourLambdas(Stream<String> stream) {
-		long initime = System.currentTimeMillis();
 		//list of functions to apply to each record
         List<Function<Stream, Stream>> pushdownFunctions = new ArrayList<>();
         Collector pushdownCollector = null;
@@ -108,8 +115,9 @@ public class LambdaPushdownStorlet implements IStorlet {
         //Sort the keys in the parameter map according to the desired order
         List<String> sortedMapKeys = new ArrayList<String>();
         sortedMapKeys.addAll(parameters.keySet());
-        Collections.sort(sortedMapKeys);
-        
+        Collections.sort(sortedMapKeys);        
+
+		long iniCompileTime = System.currentTimeMillis();
         //Iterate over the parameters that describe the functions to the applied to the stream,
         //compile and instantiate the appropriate lambdas, and add them to the list.
         for (String functionKey: sortedMapKeys){	
@@ -122,52 +130,33 @@ public class LambdaPushdownStorlet implements IStorlet {
         	int separatorPos = lambdaTypeAndBody.indexOf(LAMBDA_TYPE_AND_BODY_SEPARATOR);
         	String lambdaType = lambdaTypeAndBody.substring(0, separatorPos);
         	String lambdaBody = lambdaTypeAndBody.substring(separatorPos+1);
-        	//System.out.println("**>>New lambda to pushdown: " + lambdaType + " ->>> " + lambdaBody);
         	
-        	//Check if we have already compiled this lambda and exists in the cache
-			if (lambdaCache.containsKey(lambdaBody)) {
-				pushdownFunctions.add(lambdaCache.get(lambdaBody));
-				continue;
-			}else if (reducerCache.containsKey(lambdaBody)){
-				pushdownReducer = reducerCache.get(lambdaBody);
-				hasTerminalLambda = true;
-				continue;
-			}else if (collectorCache.containsKey(lambdaBody)){
-				pushdownCollector = collectorCache.get(lambdaBody);
-				hasTerminalLambda = true;
-				continue;
-			}
-			
+        	//Check if we have already compiled this lambda and exists in the cache			
 			//Compile the lambda and add it to the cache
 			if (lambdaBody.startsWith("collect")){
 				pushdownCollector = getCollectorObject(lambdaBody, lambdaType);
-				collectorCache.put(lambdaBody, pushdownCollector);
 		        hasTerminalLambda = true;
 			}else if (lambdaBody.startsWith("reduce")){
-				pushdownReducer = getFunctionObject(lambdaBody, lambdaType);
-				reducerCache.put(lambdaBody, pushdownReducer);
+				pushdownReducer = getAndCacheCompiledFunction(lambdaBody, lambdaType, reducerCache);
 		        hasTerminalLambda = true;
 			} else { 
 				//Add the new compiled function to the list of functions to apply to the stream
-				lambdaCache.put(lambdaBody, getFunctionObject(lambdaBody, lambdaType));			
-				pushdownFunctions.add(lambdaCache.get(lambdaBody));
+				pushdownFunctions.add(getAndCacheCompiledFunction(lambdaBody, lambdaType, lambdaCache));
 			}
         }
-        //System.out.println("Number of lambdas to execute: " + pushdownFunctions.size());
+        logger.emitLog("Number of lambdas to execute: " + pushdownFunctions.size());
         
         //Avoid overhead of composing functions
-        if (pushdownFunctions.size()==0 && !hasTerminalLambda) {
-        	//System.out.println("Compilation time: " + (System.currentTimeMillis()-initime) + "ms");
-        	return stream;
-        }
+        if (pushdownFunctions.size()==0 && !hasTerminalLambda) return stream;
         
         //Concatenate all the functions to be applied to a data stream
         Function allPushdownFunctions = pushdownFunctions.stream()
-        		.reduce(c -> c, (c1, c2) -> (s -> c2.apply(c1.apply(s))));      
-        Stream<Object> potentialTerminals = Stream.of(pushdownCollector, pushdownReducer);
-        System.out.println("Compilation time: " + (System.currentTimeMillis()-initime) + "ms");
+        		.reduce(c -> c, (c1, c2) -> (s -> c2.apply(c1.apply(s))));   
+        Stream<Object> potentialTerminals = Arrays.asList(pushdownCollector, pushdownReducer).stream();
+        logger.emitLog("Compilation time: " + (System.currentTimeMillis()-iniCompileTime) + "ms");
+        System.out.println("Compilation time: " + (System.currentTimeMillis()-iniCompileTime) + "ms");
         
-        //Apply all the functions on each stream record and only one terminal operation
+        //Apply all the functions on each stream record
     	return hasTerminalLambda ? applyTerminalOperation((Stream) allPushdownFunctions.apply(stream), 
     			potentialTerminals.filter(f -> f!=null).findFirst().get()): 
     				(Stream) allPushdownFunctions.apply(stream);
@@ -189,42 +178,89 @@ public class LambdaPushdownStorlet implements IStorlet {
 		sos.setMetadata(metadata);
 		
 		this.parameters = parameters;
+		this.logger = logger;
 		
 		//To improve performance, we have a bimodal way of writing streams. If we have lambdas,
 		//execute those lambdas on BufferedWriter/Readers, as we need to operate on text and
 		//do the encoding from bytes to strings. If there are no lambdas, we can directly manage
 		//byte streams, having much better throughput.
 		if (requestContainsLambdas(parameters)){
-			applyLambdasOnDataStream(is, os, logger);
-		} else writeByteBasedStreams(is, os, logger); 
+			applyLambdasOnDataStream(is, os);
+		} else writeByteBasedStreams(is, os); 
 		
+        this.logger = null;
         long after = System.nanoTime();
 		logger.emitLog(this.getClass().getName() + " -- Elapsed [ms]: "+((after-before)/1000000L));			
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected void applyLambdasOnDataStream(InputStream is, OutputStream os, StorletLogger logger) {
-		try{
-			//Convert InputStream as a Stream, and apply lambdas
-			BufferedWriter writeBuffer = new BufferedWriter(new OutputStreamWriter(os, CHARSET), BUFFER_SIZE);
-			BufferedReader readBuffer = new BufferedReader(new InputStreamReader(is, CHARSET), BUFFER_SIZE); 
-			writeYourLambdas(readBuffer.lines().parallel()).forEach(line -> {	
-				try {
-					writeBuffer.write(line.toString());  //As we handle different types of object, invoke toString
+	protected void applyLambdasOnDataStream(InputStream is, OutputStream os) {
+		Long inputBytes = 0L;
+		long iniTime = System.nanoTime();
+	
+		//Convert InputStream as a Stream, and apply lambdas
+		BufferedWriter writeBuffer = new BufferedWriter(new OutputStreamWriter(os, CHARSET), BUFFER_SIZE);
+		BufferedReader readBuffer = new BufferedReader(new InputStreamReader(is, CHARSET), BUFFER_SIZE); 
+		//Check if we have to write the first line of the file always
+		if (parameters.containsKey(ADD_FILE_HEADER)){
+			try {
+				writeBuffer.write(readBuffer.readLine());
+				writeBuffer.newLine();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		//By default the streams are parallel, but if ordering is necessary then convert it to sequential
+		Stream<String> dataStream = readBuffer.lines().parallel();
+		if (parameters.containsKey(SEQUENTIAL_STREAM))
+			dataStream = dataStream.sequential();
+					
+		//Create an iterator with the results of the computations of the lambdas
+		Iterator<String> resultsIterator = ((Stream<String>) writeYourLambdas(dataStream)
+												.map(s -> formatOutput(s)))
+												.iterator();
+		//Write the results in a thread-safe manner	
+		try {
+			while (resultsIterator.hasNext()) {
+				String lineString = resultsIterator.next();
+				writeBuffer.write(lineString);
+				inputBytes+=lineString.length();
+				if (resultsIterator.hasNext()) 
 					writeBuffer.newLine();
-				}catch(IOException e){
-					logger.emitLog(this.getClass().getName() + " raised IOException: " + e.getMessage());
-					e.printStackTrace(System.err);
-				}
-			});
+			}
+			logger.emitLog("Closing the streams after lambda execution...");
 			writeBuffer.close();
 			is.close();
+			os.flush();
 			os.close();
-			//System.err.println(">>>>>>>>>>> Finishing writing with lambdas!!");
-		} catch (IOException e1) {
-			logger.emitLog(this.getClass().getName() + " raised IOException 2: " + e1.getMessage());
-			e1.printStackTrace(System.err);
-		}		
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		logger.emitLog("STREAMS BW: " + ((inputBytes/1024./1024.) + " MB /" +
+			((System.nanoTime()-iniTime)/1000000000.)) + " secs = " + ((inputBytes/1024./1024.)/
+					((System.nanoTime()-iniTime)/1000000000.)) + " MBps");
+	}
+	
+	/**
+	 * Make sure that the output of lambdas is in an understandable format for a
+	 * client. This is mainly needed to write the output of collections correctly.
+	 *  
+	 * @param line
+	 * @return formatted output
+	 */
+	private static String formatOutput(Object line) {
+		String lineString = "";
+		if (line instanceof List){
+			StringBuilder sb = new StringBuilder();
+			String prefix = "";
+			for (Object o: (List) line) {
+				sb.append(prefix).append(o.toString());
+				prefix = ",";
+			}
+			lineString = sb.toString();
+		//As we handle different types of object, invoke toString
+		}else lineString = line.toString();						
+		return lineString;
 	}
 	
 	/**
@@ -258,11 +294,11 @@ public class LambdaPushdownStorlet implements IStorlet {
 			return Stream.of(((Optional) terminalOperation.apply(functionsOnStream)).get());
 		} catch (NoSuchElementException e) {
 			System.err.println("Terminal operation without result in Optional value.");
-			e.printStackTrace();
 		}
 		//Temporal default value
 		return Stream.of("");		
 	}
+	
 	@SuppressWarnings("rawtypes")
 	private Stream applyTerminalOperation(Stream functionsOnStream, Object terminalOperation) {
 		if (terminalOperation instanceof Function) 
@@ -273,18 +309,21 @@ public class LambdaPushdownStorlet implements IStorlet {
 		return Stream.of("");
 	}
 
-	private void writeByteBasedStreams(InputStream is, OutputStream os, StorletLogger logger) {
+	private void writeByteBasedStreams(InputStream is, OutputStream os) {
 		byte[] buffer = new byte[BUFFER_SIZE];
-		int len;		
+		int len, inputBytes = 0;	
+		long iniTime = System.nanoTime();
 		try {				
 			while((len=is.read(buffer)) != -1) {
 				os.write(buffer, 0, len);
+				inputBytes+=len;
 			}
 			is.close();
 			os.close();
 		} catch (IOException e) {
 			logger.emitLog(this.getClass().getName() + " raised IOException: " + e.getMessage());
 		}		
+		logger.emitLog("NOOP BW: " + ((inputBytes/1024./1024.)/((System.nanoTime()-iniTime)/1000000000.)) + "MBps");
 	}
 
 	private boolean requestContainsLambdas(Map<String, String> parameters) {
@@ -310,7 +349,7 @@ public class LambdaPushdownStorlet implements IStorlet {
 			function = (s) -> {						
 				try {
 					System.out.println("Goingto execute: " + lambdaSignature + " " + theMethod.getParameterCount());
-					return (theMethod.getParameterCount()==0)? theMethod.invoke(((Stream) s)):
+					return (lambdaType.equals(noneType))? invokeMethodOnStream((Stream) s, theMethod, lambdaSignature):
 						theMethod.invoke(((Stream) s), lambdaFactory.createLambdaUnchecked(
 						getLambdaBody(lambdaSignature), getLambdaType(methodName, lambdaType)));
 				} catch (IllegalAccessException|InvocationTargetException e) {
@@ -327,11 +366,57 @@ public class LambdaPushdownStorlet implements IStorlet {
 		return function;
 	}
 	
+	private Function getAndCacheCompiledFunction(String lambdaSignature, String lambdaType, Map<String, Function> cache){
+		if (cache.containsKey(lambdaSignature)) 
+			return cache.get(lambdaSignature);
+		Function lambda = getFunctionObject(lambdaSignature, lambdaType);
+		cache.put(lambdaSignature, lambda);
+		return lambda;
+	}
+	
+	private Object invokeMethodOnStream(Stream s, Method theMethod, String lambdaSignature) 
+						throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		//For methods without params, just invoke it (like distinct)
+		if (theMethod.getParameterTypes().length==0) 
+			return theMethod.invoke(((Stream) s));
+		
+		//For methods with params, we have to infer them for the invocation (like skip(n) or limit (n))
+		Parameter[] methodParams = theMethod.getParameters();
+		String[] parameterSignature = lambdaSignature.substring(lambdaSignature.indexOf("(")+1,
+													lambdaSignature.lastIndexOf(")")).split(",");
+		Object[] convertedParams = new Object[methodParams.length];
+		int index = 0;
+		for (Parameter p: methodParams) {
+			if (p.getParameterizedType().toString().startsWith("long") || p.getParameterizedType().toString().startsWith("java.lang.Long")) 
+					convertedParams[index] = Long.valueOf(parameterSignature[index]);
+			else if (p.getParameterizedType().toString().startsWith("int") || p.getParameterizedType().toString().startsWith("java.lang.Integer")) 
+				convertedParams[index] = Long.valueOf(parameterSignature[index]);
+			else if (p.getParameterizedType().toString().startsWith("double") || p.getParameterizedType().toString().startsWith("java.lang.Double")) 
+				convertedParams[index] = Long.valueOf(parameterSignature[index]);
+			else if (p.getParameterizedType().toString().startsWith("boolean") || p.getParameterizedType().toString().startsWith("java.lang.Boolean")) 
+				convertedParams[index] = Long.valueOf(parameterSignature[index]);
+			else if (p.getParameterizedType().toString().startsWith("java.lang.String")) 
+				convertedParams[index] = Long.valueOf(parameterSignature[index]);
+			index++;
+		}
+		//This is mainly used for simple methods requiring few simple arguments, like skip or limit
+		switch (methodParams.length) {
+			case 1:	return theMethod.invoke(((Stream) s), convertedParams[0]);
+			case 2:	return theMethod.invoke(((Stream) s), convertedParams[0], convertedParams[1]);
+			default: System.err.println("Trying to invoke a non-lambda method with more than 2 parameters. "
+					 + "We do not consider these methods, so this will crash.");
+				break;
+		};		
+		return null;
+	}
+	
 	private Method getMethodInvocation(String methodName, String lambdaType) 
 			throws NoSuchMethodException, SecurityException, ClassNotFoundException {
 		Method theMethod = null;
-		if (lambdaType.equals("None<>")) {
-			theMethod = Stream.class.getMethod(methodName);
+		if (lambdaType.equals(noneType)) {
+			theMethod = Stream.of(Stream.class.getMethods())
+					.filter(m -> m.getName().equals(methodName))
+					.findFirst().get();
 		}else theMethod = Stream.class.getMethod(methodName, Class.forName(
 					lambdaType.substring(0, lambdaType.indexOf("<")))); 
 		return theMethod;
