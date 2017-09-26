@@ -36,7 +36,7 @@ public class SparkJavaJoinLogErrorCorrelation {
 					 .map(split -> split.get(3).substring(1, split.get(3).length()))
 					 .map(s -> {
 						 try{ 
-							 return (int) new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss").parse(s).getTime()/3600000 - 223321;
+							 return (int) (new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss").parse(s).getTime()/3600000 - 223321L);
 						 }catch (Exception e) {e.printStackTrace();} return null;})					
 					 .mapToPair(l -> new Tuple2<Integer, Integer>(l, 1))
 					 .reduceByKey((a, b) -> a + b);
@@ -53,7 +53,7 @@ public class SparkJavaJoinLogErrorCorrelation {
 					.map(split -> split.get(3).substring(1, split.get(3).length()))
 					.map(s -> {
 						 try{ 
-							 return (int) new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss").parse(s).getTime()/3600000 - 223321;
+							 return (int) (new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss").parse(s).getTime()/3600000 - 223321L);
 						 }catch (Exception e) {e.printStackTrace();} return null;})					
 					 .mapToPair(l -> new Tuple2<Integer, Integer>(l, 1))
 					 .reduceByKey((a, b) -> a + b);
@@ -67,12 +67,12 @@ public class SparkJavaJoinLogErrorCorrelation {
 		Iterator<Tuple2<Integer, Integer>> errorsPerHourC1Iterator = errorsPerHourC1.toLocalIterator();
 		while (errorsPerHourC1Iterator.hasNext()){
 			Tuple2<Integer, Integer> tuple = errorsPerHourC1Iterator.next();
-			vectorContainer1.set(tuple._1(), new Double(tuple._2()));
+			vectorContainer1.set(tuple._1(), Double.valueOf(tuple._2()));
 		}			
 		Iterator<Tuple2<Integer, Integer>> errorsPerHourC2Iterator = errorsPerHourC2.toLocalIterator();
 		while (errorsPerHourC2Iterator.hasNext()){
 			Tuple2<Integer, Integer> tuple = errorsPerHourC2Iterator.next();
-			vectorContainer2.set((int) (tuple._1()), new Double(tuple._2()));
+			vectorContainer2.set((tuple._1()), new Double(tuple._2()));
 		}	
 		
 		Double correlation = Statistics.corr(sc.parallelize(vectorContainer1), sc.parallelize(vectorContainer2), "pearson");
