@@ -21,8 +21,7 @@ public class SparkJavaJoinLogErrorCorrelation {
 		SparkConf conf = new SparkConf().setAppName("SparkJavaJoinLogErrorCorrelation");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		
-		long maxTimeSlot = 223923;
-		long minTimeSlot = 223321;
+		long hourTimeSlots = 650;
 		
 		JavaRDD<String> logContainer1 = sc.textFile("swift2d://apache_logs.lvm/*");
 		JavaPairRDD<Integer, Integer> errorsPerHourC1 = logContainer1
@@ -40,7 +39,7 @@ public class SparkJavaJoinLogErrorCorrelation {
 						 }catch (Exception e) {e.printStackTrace();} return null;})					
 					 .mapToPair(l -> new Tuple2<Integer, Integer>(l, 1))
 					 .reduceByKey((a, b) -> a + b);
-						
+			
 		JavaRDD<String> logContainer2 = sc.textFile("swift2d://apache_logs2.lvm/*");
 		JavaPairRDD<Integer, Integer> errorsPerHourC2 = logContainer2
 					.map(s -> {
@@ -60,7 +59,7 @@ public class SparkJavaJoinLogErrorCorrelation {
 		
 		List<Double> vectorContainer1 = new ArrayList<>();
 		List<Double> vectorContainer2 = new ArrayList<>();
-		for (long i=minTimeSlot; i<maxTimeSlot; i++){
+		for (long i=0; i<hourTimeSlots; i++){
 			vectorContainer1.add(0.0);
 			vectorContainer2.add(0.0);
 		}
