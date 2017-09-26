@@ -3,8 +3,8 @@ package test.java;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import test.java.cases.SparkStreamingJavaHelloWorldTest;
-import test.java.cases.SparkStreamingWordCountTest;
+import test.java.cases.sparkjava.SparkStreamingJavaHelloWorldTest;
+import test.java.cases.sparkjava.SparkStreamingWordCountTest;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({

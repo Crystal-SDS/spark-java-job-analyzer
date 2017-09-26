@@ -12,7 +12,7 @@ import net.openhft.compiler.CompilerUtils;
  */
 public class JobCompiler {
 	
-	private static final String COMPILED_JOB_PATH = "test.resources.test_jobs";
+	private static final String COMPILED_JOB_PATH = "test.resources.test_jobs.javastreams";
 	
 	private static CachedCompiler compiler = CompilerUtils.CACHED_COMPILER;
 	

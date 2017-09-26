@@ -3,13 +3,13 @@ package test.java;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import test.java.cases.SparkPageRankTest;
-import test.java.cases.SparkSimpleTextAnalysisTest;
-import test.java.cases.SparkJavaCountWordsTest;
-import test.java.cases.SparkJavaJoinLogErrorCorrelationTest;
-import test.java.cases.SparkU1UserClusteringTest;
-import test.java.cases.SparkWordCountTest;
-import test.java.cases.SparkWordCountTest2;
+import test.java.cases.sparkjava.SparkJavaCountWordsTest;
+import test.java.cases.sparkjava.SparkJavaJoinLogErrorCorrelationTest;
+import test.java.cases.sparkjava.SparkPageRankTest;
+import test.java.cases.sparkjava.SparkSimpleTextAnalysisTest;
+import test.java.cases.sparkjava.SparkU1UserClusteringTest;
+import test.java.cases.sparkjava.SparkWordCountTest;
+import test.java.cases.sparkjava.SparkWordCountTest2;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({

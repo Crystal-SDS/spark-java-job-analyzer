@@ -3,16 +3,16 @@ package test.java;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import test.java.cases.Java8SimpleDistinctTest;
-import test.java.cases.Java8SimpleListCollectorTest;
-import test.java.cases.Java8SimpleLogAnalyzer2Test;
-import test.java.cases.Java8SimpleLogAnalyzer3Test;
-import test.java.cases.Java8SimpleLogAnalyzerTest;
-import test.java.cases.Java8SimpleMaxCollectorTest;
-import test.java.cases.Java8SimpleReduceTest;
-import test.java.cases.Java8SimpleReduceWithMathUseTest;
-import test.java.cases.Java8StreamVariableAssignmentsTest;
-import test.java.cases.Java8WordCountStreamsTest;
+import test.java.cases.javastreams.Java8SimpleDistinctTest;
+import test.java.cases.javastreams.Java8SimpleListCollectorTest;
+import test.java.cases.javastreams.Java8SimpleLogAnalyzer2Test;
+import test.java.cases.javastreams.Java8SimpleLogAnalyzer3Test;
+import test.java.cases.javastreams.Java8SimpleLogAnalyzerTest;
+import test.java.cases.javastreams.Java8SimpleMaxCollectorTest;
+import test.java.cases.javastreams.Java8SimpleReduceTest;
+import test.java.cases.javastreams.Java8SimpleReduceWithMathUseTest;
+import test.java.cases.javastreams.Java8StreamVariableAssignmentsTest;
+import test.java.cases.javastreams.Java8WordCountStreamsTest;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
