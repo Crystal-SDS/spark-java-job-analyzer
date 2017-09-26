@@ -73,15 +73,10 @@ public class SparkJavaJoinLogErrorCorrelation {
 			Tuple2<Integer, Integer> tuple = errorsPerHourC2Iterator.next();
 			vectorContainer2.set((tuple._1()), new Double(tuple._2()));
 		}	
-		
-		JavaRDD<Double> rddVectorC1 = sc.parallelize(vectorContainer1);
-		JavaRDD<Double> rddVectorC2 = sc.parallelize(vectorContainer2);
-		
-		Double correlation = Statistics.corr(rddVectorC1, rddVectorC2, "pearson");
+				
+		Double correlation = Statistics.corr(sc.parallelize(vectorContainer1), sc.parallelize(vectorContainer2), "pearson");
 		System.out.println("Correlation is: " + correlation);
 		System.err.println("Correlation is: " + correlation);
-		rddVectorC1.saveAsTextFile("/tmp/rddVectorC1.txt");
-		rddVectorC2.saveAsTextFile("/tmp/rddVectorC2.txt");
 			
 	}
 }
