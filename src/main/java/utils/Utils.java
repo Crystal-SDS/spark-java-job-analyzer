@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.AbstractMap.SimpleEntry;
 
@@ -132,12 +133,13 @@ public class Utils {
 		//If the we have to convert to a list either from primitives or tuples
 		if (lastParameter.startsWith("java.util.ArrayList")){
 			//String s = "1.0, 2.0";
-			String result = "java.util.Arrays.asList(java.util.stream.Stream.of(s.split(\",\")).map(a -> ";
+			String result = "java.util.stream.Stream.of(s.split(\",\")).map(a -> ";
+			//"java.util.Arrays.asList(java.util.stream.Stream.of(s.split(\",\")).map(a -> ";
 			String innerType = Utils.getParametersFromSignature(lastParameter
 								.replace("java.util.ArrayList<", "").replace(">", "")).get(0);
 			if (innerType.startsWith("Tuple2")) result += instantiateTuple(innerType, "a");
 			else result += instantiatePrimitive(innerType, "a");
-			return result += "))";
+			return result += ").collect(java.util.stream.Collectors.toList())";
 		}
 		
 		System.err.println("Problem performing the map to convert the pushded down type "
