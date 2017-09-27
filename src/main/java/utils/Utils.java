@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import java.util.AbstractMap.SimpleEntry;
 
 import org.json.simple.JSONArray;
@@ -119,4 +120,46 @@ public class Utils {
         }
         return result.toString().trim();
     }		
+	
+	//TODO: At the moment we can work with simple types, Lists and SimpleEntry
+	public static String instantiationSignature(String lastParameter, String streamVariable) {
+		//This serves for simple times, like Integer or Long
+		if (!lastParameter.contains(",") && !lastParameter.contains("<"))
+			return instantiatePrimitive(lastParameter, streamVariable);
+		//At the moment, only consider simple type parameters like Integer, String or Long
+		if (lastParameter.startsWith("Tuple2"))
+			return instantiateTuple(lastParameter, streamVariable);
+		//If the we have to convert to a list either from primitives or tuples
+		if (lastParameter.startsWith("java.util.ArrayList")){
+			//String s = "1.0, 2.0";
+			String result = "java.util.Arrays.asList(java.util.stream.Stream.of(s.split(\",\")).map(a -> ";
+			String innerType = Utils.getParametersFromSignature(lastParameter
+								.replace("java.util.ArrayList<", "").replace(">", "")).get(0);
+			if (innerType.startsWith("Tuple2")) result += instantiateTuple(innerType, "a");
+			else result += instantiatePrimitive(innerType, "a");
+			return result += "))";
+		}
+		
+		System.err.println("Problem performing the map to convert the pushded down type "
+				+ "into a type necessary for the remaining lambdas in the modified job");
+		return "";
+	}
+	
+	private static String instantiatePrimitive(String lastParameter, String streamVariable) {
+		return "new " + lastParameter + "(" + streamVariable + ")";
+	}
+
+	private static String instantiateTuple(String lastParameter, String streamVariable) {
+		List<String> params = Utils.getParametersFromSignature(
+				lastParameter.replace("Tuple2<", "").replace(">", ""));
+		String result = "new Tuple2<" + params.get(0) +"," + params.get(1)+ ">(";
+		int index = 0;
+		for (String p: params){
+			if (p.equals("java.lang.String")) result += streamVariable + ".split(\"=\")[" + index +"],";
+			else result += p + ".valueOf(" + streamVariable + ".split(\"=\")[" + index +"]), ";
+			index++;
+		}
+		System.err.println(result);
+		return result.substring(0, result.length()-2) + ")";		
+	}
 }

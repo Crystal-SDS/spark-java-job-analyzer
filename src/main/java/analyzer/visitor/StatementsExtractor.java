@@ -102,8 +102,8 @@ public class StatementsExtractor extends VoidVisitorAdapter<Object> {
 	        	lambdaType = getLambdaTypeFromNode(n);
 	        }catch(RuntimeException e){
 	        	System.err.println("Warning: Error inferring type of lambda " + n);
-	        	System.err.println("This type may not be needed, so we continue with the execution. "
-	        			+ "If we need this type for the pushdown process, we will rise an exception afterwards.");
+	        	System.err.println("Stopping the lambda migration at this point.");
+	        	break;
 	        }
 			//Add the lambda to the graph, as well as potential non-lambda method calls before it
 			addLambdaToGraph(streamKeyString, n, matchedLambda, lambdaType);

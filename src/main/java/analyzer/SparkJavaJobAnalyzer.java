@@ -23,6 +23,7 @@ import main.java.dataset.translation.sparkjava.RDDTranslator;
 import main.java.graph.FlowControlGraph;
 import main.java.graph.GraphNode;
 import main.java.rules.LambdaRule;
+import main.java.rules.reverse.sparkjava.TransformationModificationRuleSpark;
 import main.java.utils.Utils;
 
 public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
@@ -109,19 +110,25 @@ public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
         
         //Modify the original job by deleting all the functions that have been moved to the storage
         LambdaRule pushdownLambdaRule = null;
-        for (String rddName: identifiedStreams.keySet()){        	
+        for (String rddName: identifiedStreams.keySet()){   
+        	int pushdownCounter = 0;     	
 	        for (GraphNode node: identifiedStreams.get(rddName)){  
-	        	String functionName = node.getFunctionName();
 	        	if (!lambdasToMigrate.containsKey(rddName)) continue;
+	        	String functionName = node.getFunctionName();
 	        	for (SimpleEntry<String, String> theLambda: lambdasToMigrate.get(rddName)){
+	        		System.out.println(theLambda.getKey() + " > " + theLambda.getValue());
 	        		if (node.getCodeReplacement().equals(theLambda.getKey())){
 	        			try {
 							//Instantiate the class that contains the rules to pushdown a given lambda
 							pushdownLambdaRule = (LambdaRule) Class.forName(
 									reverseRulesPackage + new String(functionName.substring(0, 1)).toUpperCase() +
 									functionName.substring(1, functionName.length())).newInstance();
+							pushdownCounter++;
 							//We do not infer Spark types, so we use the Java8 types inferred as hints
 							node.setFunctionType(theLambda.getValue());
+							if (pushdownLambdaRule instanceof TransformationModificationRuleSpark)
+								((TransformationModificationRuleSpark)pushdownLambdaRule)
+									.setForceConversionMap(pushdownCounter==lambdasToMigrate.get(rddName).size());
 							//Get whether the current lambda can be pushed down or not
 							pushdownLambdaRule.applyRule(node);
 							String codeReplacement = "";

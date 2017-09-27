@@ -17,7 +17,6 @@ import main.java.utils.Utils;
 public class GraphNode {
 	
 	//RDD operations can be only transformations or actions
-	//private boolean pushable = true;
 	private boolean terminal = false;
 	
 	private String lambdaSignature;	

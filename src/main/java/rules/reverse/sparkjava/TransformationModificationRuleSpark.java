@@ -8,9 +8,11 @@ import main.java.utils.Utils;
 
 public class TransformationModificationRuleSpark implements LambdaRule{
 	
+	private boolean forceConversionMap = false;
+	
 	@Override
 	public void applyRule(GraphNode graphNode) {
-		if (graphNode.getNextNode()!=null) {
+		if (graphNode.getNextNode()!=null && !forceConversionMap) {
 			graphNode.setCodeReplacement("");
 		}else{
 			//We need a map for the last type prior to the collector/action
@@ -22,33 +24,17 @@ public class TransformationModificationRuleSpark implements LambdaRule{
 						graphNode.getMyRDD().getType().startsWith("JavaPairDStream")) 
 					conversionFunction = "mapToPair";
 				graphNode.setCodeReplacement(conversionFunction + 
-					"(s -> " + instantiationSignature(lastParameter.trim()) + ")");
+					"(s -> " + Utils.instantiationSignature(lastParameter.trim(), "s") + ")");
 			} else graphNode.setCodeReplacement("map(s -> s)");
 		}
+	}	
+
+	public boolean isForceConversionMap() {
+		return forceConversionMap;
 	}
 
-	//TODO: At the moment we can work with simple types, Lists and SimpleEntry
-	protected String instantiationSignature(String lastParameter) {
-		//This serves for simple times, like Integer or Long
-		if (!lastParameter.contains(",") && !lastParameter.contains("<"))
-			return "new " + lastParameter + "(s)";
-		//At the moment, only consider simple type parameters like Integer, String or Long
-		if (lastParameter.startsWith("Tuple2")){
-			List<String> params = Utils.getParametersFromSignature(
-					lastParameter.replace("Tuple2<", "").replace(">", ""));
-			String result = "new Tuple2<" + params.get(0) +"," + params.get(1)+ ">(";
-			int index = 0;
-			for (String p: params){
-				if (p.equals("java.lang.String")) result += "s.split(\"=\")[" + index +"],";
-				else result += p + ".valueOf(s.split(\"=\")[" + index +"]), ";
-				index++;
-			}
-			System.err.println(result);
-			return result.substring(0, result.length()-2) + ")";
-		}
-		System.err.println("Problem performing the map to convert the pushded down type"
-				+ "into a type necessary for the remaining lambdas in the modified job: " 
-					+ this.getClass().getName());
-		return "";
+	public void setForceConversionMap(boolean forceConversionMap) {
+		this.forceConversionMap = forceConversionMap;
 	}
+	
 }

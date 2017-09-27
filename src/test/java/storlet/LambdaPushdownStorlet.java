@@ -99,7 +99,7 @@ public class LambdaPushdownStorlet implements IStorlet {
 	
 	private static final String noneType = "None<>";
 	
-	public LambdaPushdownStorlet() {
+	static {
 		GetCollectorHelper.initializeCollectorCache();
 		GetTypeReferenceHelper.initializeTypeReferenceCache();
 	}
