@@ -1,6 +1,4 @@
 package test.resources.test_jobs.sparkjava;
-
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.List;
 
@@ -32,15 +30,15 @@ public class SparkJavaGridpocketWindowedStatistics {
 				.reduceByKey((t1, t2) -> Math.max(t1, t2))
 				.sortByKey()
 				.collect();
-		
+				
 		String previousMeter = null, currentMeter;
 		for(int i=sortedMeterSlotMaxValues.size()-1; i>=0; i--) {
-			Tuple2<String, Double> aggTuple = sortedMeterSlotMaxValues.get(i);
-			currentMeter = aggTuple._1.substring(0, aggTuple._1.indexOf("-")); 
-			if (previousMeter!=null && previousMeter.equals(currentMeter)){							
-				Tuple2<String, Double> perSlotTuple = new Tuple2<String, Double>(aggTuple._1,
-						sortedMeterSlotMaxValues.get(i+1)._2-aggTuple._2);
-				sortedMeterSlotMaxValues.set(i+1, perSlotTuple);		
+			currentMeter = sortedMeterSlotMaxValues.get(i)._1.substring(
+					0, sortedMeterSlotMaxValues.get(i)._1.indexOf("-")); 
+			if (previousMeter!=null && previousMeter.equals(currentMeter)){	
+				sortedMeterSlotMaxValues.set(i+1, 
+					new Tuple2<String, Double>(sortedMeterSlotMaxValues.get(i)._1,
+						sortedMeterSlotMaxValues.get(i+1)._2-sortedMeterSlotMaxValues.get(i)._2));		
 			}
 			previousMeter = currentMeter;	
 		}
