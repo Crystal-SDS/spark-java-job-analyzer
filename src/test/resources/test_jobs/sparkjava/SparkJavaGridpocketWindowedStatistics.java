@@ -1,6 +1,7 @@
 package test.resources.test_jobs.sparkjava;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.List;
 
 import org.apache.spark.SparkConf;
@@ -23,8 +24,8 @@ public class SparkJavaGridpocketWindowedStatistics {
 					String[] split = s.split(",");
 					String meterSlotKey = null;
 					try {
-						meterSlotKey = split[5] + "-" + String.valueOf(new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss")
-								.parse(split[0].substring(0, split[0].indexOf("+"))).getTime()/(24*3600*1000));
+						meterSlotKey = split[5] + "-" + String.valueOf(Instant.parse(
+								split[0].substring(0, split[0].indexOf("+"))+"Z").toEpochMilli()/(24*3600*1000));
 					} catch (Exception e) {	e.printStackTrace();}
 					return new Tuple2<String, Double>(meterSlotKey, new Double(split[1]));
 				})
@@ -63,11 +64,7 @@ public class SparkJavaGridpocketWindowedStatistics {
 						return new Tuple2<String, Tuple3<Double, Double, Double>>(t._1,
 							new Tuple3<>((Double)values._1()/values._4(), (Double)values._2(), (Double)values._3()));
 					})
-					.saveAsTextFile("swift2d://output_pushdown.lvm/gridpocket_timeslot_results.csv");
-									
-		
-		
-		
+					.saveAsTextFile("swift2d://output_pushdown.lvm/gridpocket_timeslot_results.csv");		
 	}
 
 }

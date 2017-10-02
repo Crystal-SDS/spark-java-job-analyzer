@@ -84,7 +84,7 @@ public class JavaStreamsJobAnalyzer {
         	comment.remove();
         
         //Keep the original job code if we cannot execute lambdas due to resource constraints
-        String originalJobCode = cu.toString();
+        String originalJobCode = Utils.stripSpace(cu.toString());
         String modifiedJobCode = originalJobCode;
         
         //Build the type solver for extracting the types of functions

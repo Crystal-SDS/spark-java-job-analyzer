@@ -3,6 +3,7 @@ package test.java;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
+import test.java.cases.javastreams.Java8CollectGroupByTest;
 import test.java.cases.javastreams.Java8CountWordsTest;
 import test.java.cases.javastreams.Java8SimpleDistinctTest;
 import test.java.cases.javastreams.Java8SimpleListCollectorTest;
@@ -27,6 +28,7 @@ import test.java.cases.javastreams.Java8WordCountStreamsTest;
         Java8SimpleReduceWithMathUseTest.class,
         Java8StreamVariableAssignmentsTest.class,
         Java8WordCountStreamsTest.class,
-        Java8CountWordsTest.class
+        Java8CountWordsTest.class,
+        Java8CollectGroupByTest.class
 })
 public class JavaStreamsJobAnalyzerTestSuite {}
