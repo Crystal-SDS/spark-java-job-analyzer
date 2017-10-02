@@ -125,7 +125,7 @@ public class StatementsExtractor extends VoidVisitorAdapter<Object> {
 		//Get the first (and last) terminal action
 		actionMatcher = actionsPattern.matcher(expressionString.substring(lastLambdaIndex));
 		//We enable only a single collector in the expression, if it does exist
-		if (actionMatcher.find()){
+		if (actionMatcher.find() && actionMatcher.start()==0){
 			int pos = lastLambdaIndex+actionMatcher.end()+1;
 			int openBr = 1;
 			while (openBr!=0) {

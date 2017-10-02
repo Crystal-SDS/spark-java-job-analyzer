@@ -5,6 +5,7 @@ import org.junit.runners.Suite;
 
 import test.java.cases.sparkjava.SparkJavaCountWordsTest;
 import test.java.cases.sparkjava.SparkJavaDNASimilarityTest;
+import test.java.cases.sparkjava.SparkJavaGridpocketWindowedStatisticsTest;
 import test.java.cases.sparkjava.SparkJavaJoinLogErrorCorrelationTest;
 import test.java.cases.sparkjava.SparkPageRankTest;
 import test.java.cases.sparkjava.SparkSimpleTextAnalysisTest;
@@ -21,6 +22,7 @@ import test.java.cases.sparkjava.SparkWordCountTest2;
     	SparkPageRankTest.class,
     	SparkU1UserClusteringTest.class,
     	SparkJavaJoinLogErrorCorrelationTest.class,
-    	SparkJavaDNASimilarityTest.class
+    	SparkJavaDNASimilarityTest.class,
+    	SparkJavaGridpocketWindowedStatisticsTest.class
 })
 public class SparkJobAnalyzerTestSuite {}

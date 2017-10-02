@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import pl.joegreen.lambdaFromString.TypeReference;
@@ -92,12 +91,7 @@ public class GetTypeReferenceHelper {
 	public static TypeReference getTypeReferenceObject(String functionSignature) {
 		
 		 String className = "TypeReference"+String.valueOf(Math.abs(functionSignature.hashCode()));
-		 String javaCode = "package " + "test.java.storlet" + ";\n" +
-				 			"import java.util.stream.Collectors; \n" +
-				 			"import java.util.stream.Collector; \n" +
-				 			"import java.util.AbstractMap.SimpleEntry; \n" +
-				 			"import java.util.Map; \n" +
-				 			"import test.java.storlet.IGetTypeReference; \n" +
+		 String javaCode =  "import test.java.storlet.IGetTypeReference; \n" +
 				 			"import pl.joegreen.lambdaFromString.TypeReference; \n " +
 				 			
 		                    "public class " + className + " implements IGetTypeReference {\n" +
@@ -113,7 +107,7 @@ public class GetTypeReferenceHelper {
 		return getTypeReference.getTypeReference();
 	}
 	
-	private static TypeReference getOrCompileTypeReference(Map<String, TypeReference> theMap, String theKey) {
+	private static synchronized TypeReference getOrCompileTypeReference(Map<String, TypeReference> theMap, String theKey) {
 		TypeReference result = theMap.get(theKey);
 		if (result!=null) return result;
 		result = getTypeReferenceObject(theKey);

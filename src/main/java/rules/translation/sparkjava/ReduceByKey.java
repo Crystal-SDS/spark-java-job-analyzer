@@ -1,7 +1,10 @@
 package main.java.rules.translation.sparkjava;
 
+import java.util.List;
+
 import main.java.graph.GraphNode;
 import main.java.rules.LambdaRule;
+import main.java.utils.Utils;
 
 public class ReduceByKey implements LambdaRule {
 
@@ -33,13 +36,38 @@ public class ReduceByKey implements LambdaRule {
 		String collector = null;
 		String reduceFunction = graphNode.getLambdaSignature()
 										 .substring(graphNode.getLambdaSignature().indexOf("->"));
+		reduceFunction = reduceFunction.substring(0, reduceFunction.lastIndexOf(")"));
 		
-		//TODO: Add more collectors for other reduce functions
-		if (reduceFunction.matches("->\\s*\\(?\\w*\\s*\\+\\s*\\w*\\s*\\)?"))
-			collector = "java.util.stream.Collectors.counting()";
+		collector = "java.util.stream.Collectors.reducing("; 
+		List<String> tupleParams = Utils.getParametersFromSignature(
+				tupleType.substring(tupleType.indexOf("<")+1, tupleType.lastIndexOf(">")));
+		String initialValue = "new " + tupleParams.get(1) + "(0)";
 		
-		if (collector == null) 
-			System.err.println("ERROR: Unknown collector for translation in ReduceByKey: " + reduceFunction);
+		//FIXME: Here are some conditions to infer the initial value for the Collectors.reducing
+		//operation, which is necessary for the Streams API. Note that this this only handles a 
+		//small subset of cases, but it quite infeasible to infer the correct initial value without 
+		//the input of the programmer. This is due to the operational mismatch of Spark.reduceByKey 
+		//and Streams.collect + groupingByKey/collecting 
+		if (reduceFunction.matches("->\\s*\\(?\\w*\\s*\\+\\s*\\w*\\s*\\)?") ||
+				reduceFunction.matches("->\\s*Math.addExact\\(\\s*\\w*\\s*,\\s*\\w*\\s*\\)") ||
+					reduceFunction.matches("->\\s*\\(?\\w*\\s*\\-\\s*\\w*\\s*\\)?") ||
+						reduceFunction.matches("->\\s*Math.subtractExact\\(\\s*\\w*\\s*,\\s*\\w*\\s*\\)"))
+			initialValue = "new " + tupleParams.get(1) + "(0)";
+		else if (reduceFunction.matches("->\\s*\\(?\\w*\\s*\\\\*\\s*\\w*\\s*\\)?") ||
+				reduceFunction.matches("->\\s*Math.multiplyExact\\(\\s*\\w*\\s*,\\s*\\w*\\s*\\)"))
+			initialValue = "new " + tupleParams.get(1) + "(1)";
+		else if (reduceFunction.matches("->\\s*Math.min\\(\\s*\\w*\\s*,\\s*\\w*\\s*\\)"))
+			initialValue = tupleParams.get(1) + ".MAX_VALUE";
+		else if (reduceFunction.matches("->\\s*Math.max\\(\\s*\\w*\\s*,\\s*\\w*\\s*\\)")) 
+			initialValue = tupleParams.get(1) + ".MIN_VALUE";
+		else if (tupleParams.get(1).equals("String"))
+			initialValue = "";
+		else System.err.println("WARNING: No initial value found for expression");
+			
+		collector += initialValue + ", " + tupleType + "::getValue, " + graphNode.getLambdaSignature()
+																.substring(graphNode.getLambdaSignature().indexOf("(")+1) ;
+		//if (collector == null) 
+		//	System.err.println("ERROR: Unknown collector for translation in ReduceByKey: " + reduceFunction);
 		
 		replacement.append(collector + "))");
 		graphNode.setCodeReplacement(replacement.toString());

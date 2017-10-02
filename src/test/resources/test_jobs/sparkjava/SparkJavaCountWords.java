@@ -11,7 +11,7 @@ public class SparkJavaCountWords {
 		SparkConf conf = new SparkConf().setAppName("SimpleTextAnalysisSparkJava");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		JavaRDD<String> distFile = sc.textFile("swift2d://data1.lvm/hamlet.txt");
-		distFile.map(s -> s.split(" ").length).reduce((a, b) -> a + b);		
+		distFile.map(s -> new Long(s.split(" ").length)).reduce((a, b) -> (Long) a + b);		
 	}
 
 }
