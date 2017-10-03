@@ -1,6 +1,8 @@
 package test.resources.test_jobs.sparkjava;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.spark.SparkConf;
@@ -36,9 +38,17 @@ public class SparkJavaGridpocketWindowedStatistics {
 					List<Tuple2<String, Iterable<Tuple2<String, Double>>>> finalResults = new ArrayList<>();
 					while (meterPartitions.hasNext()) {
 						Tuple2<String, Iterable<Tuple2<String, Double>>> meterTuple = meterPartitions.next();
+						List<Tuple2<String, Double>> toSortSlots = new ArrayList<>();
+						for (Tuple2<String, Double> slotTuple: meterTuple._2())
+							toSortSlots.add(slotTuple);
+						Collections.sort(toSortSlots, new Comparator<Tuple2<String, Double>>(){
+							public int compare(Tuple2<String, Double> tupleA, Tuple2<String, Double> tupleB) {
+					            return tupleA._1.compareTo(tupleB._1);
+						}});
+						
 						List<Tuple2<String, Double>> perSlotMeterEnergy = new ArrayList<>();
 						Double previousMeter = null;
-						for (Tuple2<String, Double> slotTuple: meterTuple._2()) {	
+						for (Tuple2<String, Double> slotTuple: toSortSlots) {	
 							if (previousMeter!=null){	
 								perSlotMeterEnergy.add(new Tuple2<String, Double>(slotTuple._1(), slotTuple._2()-previousMeter));		
 							} else perSlotMeterEnergy.add(slotTuple);
@@ -68,6 +78,7 @@ public class SparkJavaGridpocketWindowedStatistics {
 					return new Tuple2<String, Tuple3<Double, Double, Double>>(date,
 						new Tuple3<>((Double)values._1()/values._4(), (Double)values._2(), (Double)values._3()));
 				})
+				.coalesce(1)
 				.saveAsTextFile("swift2d://output_pushdown.lvm/gridpocket_timeslot_results.csv");
 	}
 
