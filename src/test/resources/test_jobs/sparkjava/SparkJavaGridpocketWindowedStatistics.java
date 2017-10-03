@@ -1,5 +1,6 @@
 package test.resources.test_jobs.sparkjava;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.spark.SparkConf;
@@ -31,19 +32,20 @@ public class SparkJavaGridpocketWindowedStatistics {
 				.sortByKey()
 				.collect();
 				
-		String previousMeter = null, currentMeter;
-		for(int i=sortedMeterSlotMaxValues.size()-1; i>=0; i--) {
-			currentMeter = sortedMeterSlotMaxValues.get(i)._1.substring(
-					0, sortedMeterSlotMaxValues.get(i)._1.indexOf("-")); 
+		String previousMeter = null, currentMeter = null;
+		List<Tuple2<String, Double>> sortedMeterSlotCleanValues = new ArrayList<>();
+		for(int i=0; i<sortedMeterSlotMaxValues.size()-1; i++) {
+			currentMeter = sortedMeterSlotMaxValues.get(i)._1().substring(
+					0, sortedMeterSlotMaxValues.get(i)._1().indexOf("-"));
 			if (previousMeter!=null && previousMeter.equals(currentMeter)){	
-				sortedMeterSlotMaxValues.set(i+1, 
-					new Tuple2<String, Double>(sortedMeterSlotMaxValues.get(i)._1,
-						sortedMeterSlotMaxValues.get(i+1)._2-sortedMeterSlotMaxValues.get(i)._2));		
-			}
+				sortedMeterSlotCleanValues.add(new Tuple2<String, Double>(sortedMeterSlotMaxValues.get(i)._1(), 
+					sortedMeterSlotMaxValues.get(i)._2()-sortedMeterSlotMaxValues.get(i-1)._2()));		
+			} else sortedMeterSlotCleanValues.add(sortedMeterSlotMaxValues.get(i));
 			previousMeter = currentMeter;	
 		}
+		sortedMeterSlotMaxValues.clear();
 		
-		sc.parallelizePairs(sortedMeterSlotMaxValues)
+		sc.parallelizePairs(sortedMeterSlotCleanValues)
 					.mapToPair(t -> {
 						Tuple4<Double, Double, Double, Long> values = new Tuple4<>(t._2, t._2, t._2, 1L);								
 						return new Tuple2<String, Tuple4>(t._1.substring(t._1.indexOf("=")+1), values); 
