@@ -1,4 +1,5 @@
 package test.resources.test_jobs.sparkjava;
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,12 +22,6 @@ public class SparkJavaGridpocketWindowedStatistics {
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		JavaRDD<String> distFile = sc.textFile("swift2d://gridpocket_140GB.lvm/1.csv");
 		
-		Comparator<Tuple2<String, Double>> tupleComparator = new Comparator<Tuple2<String, Double>>(){
-			public int compare(Tuple2<String, Double> tupleA, Tuple2<String, Double> tupleB) {
-		    	return tupleA._1.compareTo(tupleB._1);
-			}
-		};
-		
 		distFile.filter(s -> !s.startsWith("date"))
 				.mapToPair(s -> {
 					String[] split = s.split(",");
@@ -48,7 +43,7 @@ public class SparkJavaGridpocketWindowedStatistics {
 						List<Tuple2<String, Double>> toSortSlots = new ArrayList<>();
 						for (Tuple2<String, Double> slotTuple: meterTuple._2())
 							toSortSlots.add(slotTuple);
-						Collections.sort(toSortSlots, tupleComparator);
+						Collections.sort(toSortSlots,  new TupleComparator());
 						
 						List<Tuple2<String, Double>> perSlotMeterEnergy = new ArrayList<>();
 						Double previousMeter = null;
@@ -86,5 +81,13 @@ public class SparkJavaGridpocketWindowedStatistics {
 				.saveAsTextFile("swift2d://output_pushdown.lvm/gridpocket_timeslot_results.csv");
 	}
 
+}
+
+class TupleComparator implements Comparator<Tuple2<String, Double>>, Serializable {
+	private static final long serialVersionUID = 1L;
+
+	public int compare(Tuple2<String, Double> tupleA, Tuple2<String, Double> tupleB) {
+    	return tupleA._1.compareTo(tupleB._1);
+	}
 }
 
