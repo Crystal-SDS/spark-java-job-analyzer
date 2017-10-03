@@ -20,6 +20,13 @@ public class SparkJavaGridpocketWindowedStatistics {
 		SparkConf conf = new SparkConf().setAppName("SimpleTextAnalysisSparkJava");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		JavaRDD<String> distFile = sc.textFile("swift2d://gridpocket_140GB.lvm/1.csv");
+		
+		Comparator<Tuple2<String, Double>> tupleComparator = new Comparator<Tuple2<String, Double>>(){
+			public int compare(Tuple2<String, Double> tupleA, Tuple2<String, Double> tupleB) {
+		    	return tupleA._1.compareTo(tupleB._1);
+			}
+		};
+		
 		distFile.filter(s -> !s.startsWith("date"))
 				.mapToPair(s -> {
 					String[] split = s.split(",");
@@ -41,10 +48,7 @@ public class SparkJavaGridpocketWindowedStatistics {
 						List<Tuple2<String, Double>> toSortSlots = new ArrayList<>();
 						for (Tuple2<String, Double> slotTuple: meterTuple._2())
 							toSortSlots.add(slotTuple);
-						Collections.sort(toSortSlots, new Comparator<Tuple2<String, Double>>(){
-							public int compare(Tuple2<String, Double> tupleA, Tuple2<String, Double> tupleB) {
-					            return tupleA._1.compareTo(tupleB._1);
-						}});
+						Collections.sort(toSortSlots, tupleComparator);
 						
 						List<Tuple2<String, Double>> perSlotMeterEnergy = new ArrayList<>();
 						Double previousMeter = null;
@@ -83,3 +87,4 @@ public class SparkJavaGridpocketWindowedStatistics {
 	}
 
 }
+
