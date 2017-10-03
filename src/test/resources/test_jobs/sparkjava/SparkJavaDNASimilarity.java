@@ -34,10 +34,7 @@ public class SparkJavaDNASimilarity {
 				.cache();
 		
 		RowMatrix rowMatrix = new RowMatrix(gattacaDNAToVectors.rdd());
-		//Execute pair-to-pair sequence similarity algorithm
-		Iterator<MatrixEntry> similarityIterator = rowMatrix.columnSimilarities().entries().toLocalIterator();
-		while (similarityIterator.hasNext())
-			System.err.println(similarityIterator.next());
+		rowMatrix.columnSimilarities().entries().saveAsTextFile("swift2d://output_pushdown.lvm/dna_similarities.csv");
 		
 	}
 
