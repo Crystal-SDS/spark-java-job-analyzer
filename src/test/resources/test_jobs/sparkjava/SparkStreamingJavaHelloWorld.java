@@ -10,7 +10,7 @@ public class SparkStreamingJavaHelloWorld {
 	
 	public static void main(String[] args) {
 		
-		SparkConf conf = new SparkConf().setAppName("Simple Streaming Application")
+		SparkConf conf = new SparkConf().setAppName("SparkStreamingJavaHelloWorld")
 						.setMaster("local[*]");
 		SparkContext sc = new SparkContext(conf);
 		StreamingContext ssc = new StreamingContext(sc, new Duration(2000));

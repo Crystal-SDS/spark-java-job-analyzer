@@ -18,7 +18,7 @@ public class SparkJavaGridpocketWindowedStatistics {
 	
 	public static void main(String[] args) {
 		
-		SparkConf conf = new SparkConf().setAppName("SimpleTextAnalysisSparkJava");
+		SparkConf conf = new SparkConf().setAppName("SparkJavaGridpocketWindowedStatistics");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		JavaRDD<String> distFile = sc.textFile("swift2d://gridpocket_140GB.lvm/1.csv");
 		

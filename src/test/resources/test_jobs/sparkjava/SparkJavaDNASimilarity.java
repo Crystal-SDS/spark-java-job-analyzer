@@ -16,7 +16,7 @@ public class SparkJavaDNASimilarity {
 	
 	public static void main(String[] args) {
 		
-		SparkConf conf = new SparkConf().setAppName("SimpleTextAnalysisSparkJava");
+		SparkConf conf = new SparkConf().setAppName("SparkJavaDNASimilarity");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		
 		JavaRDD<String> distFile = sc.textFile("swift2d://dna_data.lvm/*");
