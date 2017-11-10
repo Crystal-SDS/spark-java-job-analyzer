@@ -1,8 +1,8 @@
 package main.java.dataset.reverse.sparkjava;
 
-import main.java.dataset.SparkDatasetTranslation;
+import main.java.dataset.DatasetTranslation;
 
-public class RDDReverse implements SparkDatasetTranslation{
+public class RDDReverse implements DatasetTranslation{
 	
 	public String applyDatasetTranslation(String datasetName, String datasetType, String jobCode) {
 		String mainType = datasetType;

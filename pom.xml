@@ -110,6 +110,15 @@
 		    <artifactId>slf4j-api</artifactId>
 		    <version>1.7.25</version>
 		</dependency>		-->
+		
+		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-java -->
+		<dependency>
+		    <groupId>org.apache.flink</groupId>
+		    <artifactId>flink-java</artifactId>
+		    <version>1.3.2</version>
+		</dependency>
+		
+		
 
 	</dependencies>
 

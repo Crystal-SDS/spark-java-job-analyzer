@@ -1,4 +1,4 @@
-package test.resources.test_jobs.flink;
+package test.resources.test_jobs.flinkjava;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -60,17 +60,7 @@ public class FlinkJavaWordCount {
 		env.getConfig().setGlobalJobParameters(params);
 
 		// get input data
-		DataSet<String> text = env.readTextFile(params.get("swift2d://data1.lvm/hamlet.txt"));
-		
-		if (params.has("input")) {
-			// read the text file from given input path
-			text = env.readTextFile(params.get("input"));
-		} else {
-			// get default test text data
-			System.out.println("Executing WordCount example with default input data set.");
-			System.out.println("Use --input to specify file input.");
-			//text = WordCountData.getDefaultTextLineDataSet(env);
-		}
+		DataSet<String> text = env.readTextFile("swift2d://wikipedia_en_large.lvm/*");
 
 		DataSet<Tuple2<String, Integer>> counts =
 				// split up the lines in pairs (2-tuples) containing: (word,1)
@@ -79,15 +69,8 @@ public class FlinkJavaWordCount {
 				.groupBy(0)
 				.sum(1);
 
-		// emit result
-		if (params.has("output")) {
-			counts.writeAsCsv(params.get("output"), "\n", " ");
-			// execute program
-			env.execute("WordCount Example");
-		} else {
-			System.out.println("Printing result to stdout. Use --output to specify output path.");
-			counts.print();
-		}
+
+		counts.writeAsCsv("swift2d://output_pushdown.lvm/result.csv", "\n", " ");
 
 	}
 

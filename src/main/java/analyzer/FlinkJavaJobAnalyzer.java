@@ -19,6 +19,7 @@ import com.github.javaparser.ast.comments.Comment;
 import main.java.analyzer.visitor.StatementsExtractor;
 import main.java.analyzer.visitor.StreamIdentifierVisitor;
 import main.java.dataset.DatasetTranslation;
+import main.java.dataset.translation.flinkjava.DataSetTranslator;
 import main.java.dataset.translation.sparkjava.RDDTranslator;
 import main.java.graph.FlowControlGraph;
 import main.java.graph.GraphNode;
@@ -26,16 +27,14 @@ import main.java.rules.LambdaRule;
 import main.java.rules.reverse.sparkjava.TransformationModificationRuleSpark;
 import main.java.utils.Utils;
 
-public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
+public class FlinkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
 
-	protected final String jobType = "sparkjava";
+	protected final String jobType = "flinkjava";
 
-	protected static String targetedDatasets = "(RDD|JavaRDD|JavaPairRDD|DStream|"
-			+ "JavaDStream|JavaPairDStream)\\s*";
+	protected static String targetedDatasets = "(DataSet)\\s*";
 	
-	protected final String pushableTransformations = "(map|filter|flatMap|mapToPair|"
-			+ "reduceByKey|reduce|distinct|groupByKey)";
-	protected final String pushableActions = "(collect|count|foreach)";
+	protected final String pushableTransformations = "(map|filter)";
+	protected final String pushableActions = "(reduce)";
 	
 	protected final String translationRulesPackage = "main.java.rules.translation." + jobType  + ".";
 	protected final String reverseRulesPackage = "main.java.rules.reverse." + jobType  + ".";
@@ -78,7 +77,7 @@ public class SparkJavaJobAnalyzer extends JavaStreamsJobAnalyzer {
         for (String key: identifiedStreams.keySet()){
         	FlowControlGraph graph = identifiedStreams.get(key);  
         	//Instantiate the class and execute the translation to Java8 streams
-			DatasetTranslation datasetTranslator = new RDDTranslator();
+			DatasetTranslation datasetTranslator = new DataSetTranslator();
 			translatedJobCode = datasetTranslator.applyDatasetTranslation(
 				graph.getRdd(), graph.getType(), translatedJobCode);
         	//Perform the translation for each of the lambdas of the dataset

@@ -1,8 +1,8 @@
 package main.java.dataset.translation.sparkjava;
 
-import main.java.dataset.SparkDatasetTranslation;
+import main.java.dataset.DatasetTranslation;
 
-public class RDDTranslator implements SparkDatasetTranslation {
+public class RDDTranslator implements DatasetTranslation {
 	
 	private final static String sparkAPIPackage = "org.apache.spark.api.java.";
 	private final static String sparkStreamingAPIPackage = "org.apache.spark.streaming.api.java.";
