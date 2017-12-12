@@ -14,17 +14,23 @@ import scala.Tuple2;
 import scala.Tuple3;
 import scala.Tuple4;
 
+/**
+ * Args example: "swift2d://gridpocket_demo.lvm/*.csv 30 swift2d://output_pushdown.lvm/gridpocket_timeslot_results.csv"
+ *
+ * Computes windowed statistics 
+ */
 public class SparkJavaGridpocketWindowedStatisticsWithArgs {
 	
 	public static void main(String[] args) {
 		
-		SparkConf conf = new SparkConf().setAppName("SparkJavaGridpocketWindowedStatistics");
+		SparkConf conf = new SparkConf().setAppName("SparkJavaGridpocketWindowedStatisticsWithArgs");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		JavaRDD<String> distFile = sc.textFile(args[0]);
 		
 		distFile.filter(s -> !s.startsWith("date"))
+		        .filter(s -> s.contains("," + args[3] + ","))
 				.mapToPair(s -> {
-					int minutes = Integer.parseInt(args[1]);
+					int minutes = Integer.parseInt(args[2]);
 					String[] split = s.split(",");
 					String meterSlotKey = null;
 					try {
@@ -73,14 +79,14 @@ public class SparkJavaGridpocketWindowedStatisticsWithArgs {
 				})
 				.sortByKey()
 				.map(t -> {
-					int minutes = Integer.parseInt(args[1]);
+					int minutes = Integer.parseInt(args[2]);
 					Tuple4<Double, Double, Double, Long> values = t._2;
 					String date = Instant.ofEpochMilli(Long.valueOf(t._1)*minutes*60*1000).toString();
 					return new Tuple2<String, Tuple3<Double, Double, Double>>(date,
 						new Tuple3<>((Double)values._1()/values._4(), (Double)values._2(), (Double)values._3()));
 				})
 				.coalesce(1)
-				.saveAsTextFile("swift2d://output_pushdown.lvm/gridpocket_timeslot_results.csv");
+				.saveAsTextFile(args[1]);
 	}
 
 }
